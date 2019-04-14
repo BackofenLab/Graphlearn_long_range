@@ -29,13 +29,13 @@ import graphlearn.abstract_graphs.RNA as rna
 from graphlearn.estimator import Wrapper as estimatorwrapper
 
 sampler=rna.AbstractSampler(radius_list=[0,1], 
-							thickness_list=[2],  
-							min_cip_count=1, 
-							min_interface_count=2, 
-							preprocessor=rna.PreProcessor(base_thickness_list=[1],ignore_inserts=True),
-							postprocessor=rna.PostProcessor(),
-							estimator=estimatorwrapper( nu=.5, cv=2, n_jobs=-1)
-						   )
+                            thickness_list=[2],  
+                            min_cip_count=1, 
+                            min_interface_count=2, 
+                            preprocessor=rna.PreProcessor(base_thickness_list=[1],ignore_inserts=True),
+                            postprocessor=rna.PostProcessor(),
+                            estimator=estimatorwrapper( nu=.5, cv=2, n_jobs=-1)
+                           )
 sequences = sampler.sample([sequences from an RNA family])
 
 ```
