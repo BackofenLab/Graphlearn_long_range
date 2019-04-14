@@ -5,7 +5,7 @@ This is acchieved by coarsening a graph and combining
 the interface on the base and coarsened level. 
 
 
-## experimental results
+## Experimental results
 
 We test out grammar on RNA molecules. 
 Generated graphs are assigned a bit-score by a state of the art oracle.
@@ -19,7 +19,7 @@ than 39 should be considered to belong to the RNA family in question.
 ## Usage 
 
 The code below demonstrates how to use this technique on RNAs, 
-if you are interested in the general graph application please see the
+if you are interested in the application on general graphs please see the
 modern implementation.
 
 
@@ -41,13 +41,13 @@ sequences = sampler.sample([sequences from an RNA family])
 ```
 
 
-## graph grammar 
+## Graph grammar 
 
 A modern version of the grammar can be found at 
 https://github.com/fabriziocosta/GraphLearn
 
 
-## running the experiments
+## Running the experiments
 
 Experiments are in code/experiments.
 HPC scripts are for the "sun grid engine".
