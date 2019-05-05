@@ -52,4 +52,9 @@ https://github.com/fabriziocosta/GraphLearn
 Experiments are in code/experiments.
 HPC scripts are for the "sun grid engine".
 
+## comparison to GraphRNN
+
+In the paper we demonstrated GraphRNN applied to RNA grpahs. Our modified GraphRNN:
+
+https://github.com/smautner/GraphRNN
 
