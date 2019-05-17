@@ -18,15 +18,16 @@ than 39 should be considered to belong to the RNA family in question.
 
 ## Usage General Case
 
-this should take care of all dependencies:
+This should take care of all dependencies.
 ```
 pip3 install git+https://github.com/fabriziocosta/EDeN.git --user
 pip3 install graphlearn structout
 ```
 
-lets first load some data, input musst be networkx graphs with 'label' annotation on every node/edge
-cycler will generate a coarsened graph that contracts cycles 
-and store the original graph in g.graphp['original']
+Lets first load some data, input musst be networkx graphs with 'label' annotation on every node/edge.
+The cycler will generate a coarsened graph that contracts cycles 
+and store the original graph in g.graphp['original'].
+
 ```python3
 from graphlearn3.util import util as util_top
 from graphlearn3.test import cycler
@@ -40,7 +41,7 @@ gplus = c.encode_single(gplus)
 
 
 
-fitting a grammar and conducting one substitution
+Fitting a grammar and conducting one substitution
 ```python3
 from graphlearn3.lsgg_layered import lsgg_layered
 decomposition_args={ "base_thickness_list":[2],
@@ -51,7 +52,7 @@ lsggg.fit([g, gplus, g,gplus])
 neigh = lsggg.neighbors(gplus).__next__()
 ```
 
-print original and generated graph to terminal
+Print original and generated graph to terminal
 ```python3
 import structout as so
 so.gprint([gplus, gplus.graph['original']], size =15)
