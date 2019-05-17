@@ -16,7 +16,46 @@ than 39 should be considered to belong to the RNA family in question.
 <img src="similarity.png">
 
 
-## Usage 
+## Usage General Case
+
+this should take care of all dependencies:
+```
+pip3 install git+https://github.com/fabriziocosta/EDeN.git --user
+pip3 install graphlearn structout
+```
+
+```python3
+# lets first load some data, 
+# input musst be networkx graphs with 'label' annotation on every node/edge
+# cycler will generate a coarsened graph that contracts cycles and store the original graph in g.graphp['original']
+from graphlearn3.util import util as util_top
+from graphlearn3.test import cycler
+g = util_top.test_get_circular_graph()
+gplus=g.copy()
+gplus.node[0]['label']='weird' 
+c=cycler.Cycler()
+g=c.encode_single(g)
+gplus = c.encode_single(gplus)
+
+
+# fitting a grammar and conducting one substitution
+from graphlearn3.lsgg_layered import lsgg_layered
+decomposition_args={ "base_thickness_list":[2],
+                    "radius_list": [0],
+                    "thickness_list": [1]}
+lsggg = lsgg_layered(decomposition_args=decomposition_args)
+lsggg.fit([g, gplus, g,gplus])
+neigh = lsggg.neighbors(gplus).__next__()
+
+
+# print original and generated graph to terminal
+import structout as so
+so.gprint([gplus, gplus.graph['original']], size =15)
+neigh=c.encode_single(neigh)
+so.gprint([neigh, neigh.graph['original']], size =15)
+```
+
+## Usage RNA
 
 The code below demonstrates how to use this technique on RNAs, 
 if you are interested in the application on general graphs please see the
