@@ -64,7 +64,7 @@ so.gprint([neigh, neigh.graph['original']], size =15)
 
 The code below demonstrates how to use this technique on RNAs, 
 if you are interested in the application on general graphs please see the
-modern implementation.
+modern implementation showcased above.
 
 
 
