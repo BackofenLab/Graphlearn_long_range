@@ -18,7 +18,7 @@ print('ARGS:',args)
 import rdkitutils  as rdk
 z=open(args.train_load,'r').read().split()[1:]
 z=[zz[:-6] for zz in z ]
-graphs = list(rdk.smiles_strings_to_nx(z))[:100]
+graphs = list(rdk.smiles_strings_to_nx(z))[:1000]
 
 # 2. train grammar
 from graphlearn.lsgg_layered import lsgg_layered
@@ -46,11 +46,12 @@ from graphlearn.select import SelectMax
 import basics as b
 
 def sample_single(x):
+    #print (".",end='')
     graph, grammar, esti =x 
     return sample.sample(graph,Cycler(),grammar=grammar,scorer=esti, selector=SelectMax())
 
-it = [(g,grammar,esti) for g in graphs[:4]  ]
-res = b.mpmap(sample_single,it, poolsize=int(args.n_jobs))
+it = [(g,grammar,esti) for g in graphs  ]
+res = b.mpmap_prog(sample_single,it, poolsize=int(args.n_jobs))
 
 
 # 5 write to dst
