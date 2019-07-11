@@ -29,8 +29,8 @@ The cycler will generate a coarsened graph that contracts cycles
 and store the original graph in g.graphp['original'].
 
 ```python3
-from graphlearn3.util import util as util_top
-from graphlearn3.test import cycler
+from graphlearn.util import util as util_top
+from graphlearn.test import cycler
 g = util_top.test_get_circular_graph()
 gplus=g.copy()
 gplus.node[0]['label']='weird' 
@@ -43,7 +43,7 @@ gplus = c.encode_single(gplus)
 
 Fitting a grammar and conducting one substitution
 ```python3
-from graphlearn3.lsgg_layered import lsgg_layered
+from graphlearn.lsgg_layered import lsgg_layered
 decomposition_args={ "base_thickness_list":[2],
                     "radius_list": [0],
                     "thickness_list": [1]}
