@@ -21,7 +21,7 @@ print('ARGS:',args)
 import rdkitutils  as rdk
 z=open(args.train_load,'r').read().split()[1:]
 z=[zz[:-6] for zz in z ]
-graphs = list(rdk.smiles_strings_to_nx(z))[:1000]
+graphs = list(rdk.smiles_strings_to_nx(z))
 
 # 2. train grammar
 from graphlearn.lsgg_layered import lsgg_layered
