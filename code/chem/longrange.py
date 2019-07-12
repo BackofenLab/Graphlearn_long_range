@@ -27,16 +27,18 @@ graphs = list(rdk.smiles_strings_to_nx(z))
 
 # 2. train grammar
 from graphlearn.lsgg_layered import lsgg_layered
+from graphlearn.lsgg import lsgg
 from graphlearn.test.cycler import Cycler
 from graphlearn.test.transformutil import no_transform
 c=[ Cycler(),no_transform()][args.transform]
-
+grammarclass =[lsgg_layered,lsgg ][args.transform]
 decomposition_args={ "base_thickness_list":[2],
-                    "radius_list": [0.1],
+                    "radius_list": [0,1],
                     "thickness_list": [1]}
 filter_args={ "min_cip_count": args.mincip, "min_interface_count": 2}
 coarsened = [c.encode_single(g)for g in graphs] # this is the problematic one
-grammar = lsgg_layered(decomposition_args=decomposition_args, filter_args=filter_args).fit(coarsened)
+
+grammar = grammarclass(decomposition_args=decomposition_args, filter_args=filter_args).fit(coarsened)
 
 print("GRAMMAR TRAINED")
 
