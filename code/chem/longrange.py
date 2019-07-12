@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
 parser.add_argument('--train_load', help='path to train smiles file')
-parser.add_argument('--n_samples', help=' how many smiles to generate')
+parser.add_argument('--n_samples',type=int, help=' how many smiles to generate')
 parser.add_argument('--gen_save', help='where to save generated smiles strings')
 parser.add_argument('-s','--n_select',type=int, help='this many survive each roung')
 parser.add_argument('-n','--n_neighbors',type=int, help='this many random neighbors are sampled for each surviving instance')
@@ -55,9 +55,12 @@ def sample_single(x):
     return sample.multi_sample(graph,Cycler(),grammar=grammar,scorer=esti, selector=SPN(n_select),n_steps=n_steps,n_neighbors=n_neigh)
 
 sel,ste,nei = args.n_select, args.n_steps, args.n_neighbors 
+if args.n_samples != None:
+    graphs= graphs[:args.n_samples]
 it = [(g,grammar,esti,sel,ste,nei) for g in graphs  ]
 print('STARTMAP')
-res = b.mpmap_prog(sample_single,it, poolsize=args.n_jobs)
+res = b.mpmap_prog(sample_single,it,chunksize=1, poolsize=args.n_jobs)
 
 # 5 write to dst
 rdk.nx_to_smi(res,args.gen_save)
+open(args.gen_save+".args","w").write(str(args))
