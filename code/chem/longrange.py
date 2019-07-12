@@ -21,7 +21,7 @@ print('ARGS:',args)
 import rdkitutils  as rdk
 z=open(args.train_load,'r').read().split()[1:]
 z=[zz[:-6] for zz in z ]
-graphs = list(rdk.smiles_strings_to_nx(z))[:100]
+graphs = list(rdk.smiles_strings_to_nx(z))[:1000]
 
 # 2. train grammar
 from graphlearn.lsgg_layered import lsgg_layered
@@ -55,7 +55,7 @@ def sample_single(x):
     return sample.multi_sample(graph,Cycler(),grammar=grammar,scorer=esti, selector=SPN(n_select),n_steps=n_steps,n_neighbors=n_neigh)
 
 sel,ste,nei = args.n_select, args.n_steps, args.n_neighbors 
-it = [(g,grammar,esti,sel,ste,nei) for g in graphs[:10]  ]
+it = [(g,grammar,esti,sel,ste,nei) for g in graphs  ]
 print('STARTMAP')
 res = b.mpmap_prog(sample_single,it, poolsize=args.n_jobs)
 
