@@ -11,7 +11,7 @@ parser.add_argument('--gen_save', help='where to save generated smiles strings')
 parser.add_argument('-s','--n_select',type=int, help='this many survive each roung')
 parser.add_argument('-n','--n_neighbors',type=int, help='this many random neighbors are sampled for each surviving instance')
 parser.add_argument('-p','--n_steps', type=int,help='this many rounds are conducted')
-parser.add_argument('--mincip',type=int, help='min cip count for grammar training')
+parser.add_argument('--mincip',default=2,type=int, help='min cip count for grammar training')
 parser.add_argument('--transform',type=int,default=0, help='choose transformer default=cycle')
 
 args = parser.parse_args()
@@ -65,6 +65,7 @@ if args.n_samples != None:
 it = [(g,grammar,esti,sel,ste,nei,c) for g in graphs  ]
 print('STARTMAP')
 res = b.mpmap_prog(sample_single,it,chunksize=1, poolsize=args.n_jobs)
+#res = map(sample_single,it)
 
 # 5 write to dst
 rdk.nx_to_smi(res,args.gen_save)
