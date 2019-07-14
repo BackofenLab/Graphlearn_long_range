@@ -23,8 +23,9 @@ case coarsened
     python longrange.py --n_jobs 30\
                         --train_load $data/train.csv\
                         --gen_save $data/coarsened\
-                        -s 5 -p 10 -n 20\
-                        --transform 1
+                        -s 2 -p 10 -n 50\
+                        --transform 0\
+                        --n_samples 1000
 case baseline_lin
     python longrange.py --n_jobs 30\
                         --train_load $data/train.csv\
@@ -37,7 +38,7 @@ case coarsened_lin
                         --train_load $data/train.csv\
                         --gen_save $data/coarsened_lin\
                         -s 5 -p 10 -n 20\
-                        --transform 1\
+                        --transform 0\
                         --svm linear
 
 end 
