@@ -16,13 +16,13 @@ case debug
 case baseline
     python longrange.py --n_jobs 30\
                         --train_load $data/train.csv\
-                        --gen_save $data/DEBUG\
+                        --gen_save $data/baseline\
                         -s 5 -p 10 -n 20\
                         --transform 1
 case coarsened
     python longrange.py --n_jobs 30\
                         --train_load $data/train.csv\
-                        --gen_save $data/DEBUG\
+                        --gen_save $data/coarsened\
                         -s 5 -p 10 -n 20
                         --transform 1
 end 
