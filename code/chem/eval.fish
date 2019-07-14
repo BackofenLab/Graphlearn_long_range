@@ -1,5 +1,6 @@
 
 set models aae char_rnn vae organ 
+
 set data data5000
 
 for model in $models
@@ -8,3 +9,4 @@ for model in $models
                         --device cuda\
                         --test_scaffolds_path $data/test_scaffolds.csv\
                         --ptest_scaffolds_path $data/test_scaffolds_stats.npz
+end
