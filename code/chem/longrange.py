@@ -13,6 +13,7 @@ parser.add_argument('-n','--n_neighbors',type=int, help='this many random neighb
 parser.add_argument('-p','--n_steps', type=int,help='this many rounds are conducted')
 parser.add_argument('--mincip',default=2,type=int, help='min cip count for grammar training')
 parser.add_argument('--transform',type=int,default=0, help='choose transformer default=cycle')
+parser.add_argument('--svm',type=str,default='plain', help='linear for linear kernel')
 
 args = parser.parse_args()
 print('ARGS:',args)
@@ -44,7 +45,15 @@ print("GRAMMAR TRAINED")
 
 # 3. train estimator for samplingn 
 from graphlearn.score import OneClassEstimator
-esti = OneClassEstimator().fit(graphs)
+from sklearn.svm import OneClassSVM 
+if args.svm == 'plain':
+    model = OneClassSVM()
+elif args.svm == 'linear':
+    model = OneClassSVM(kernel='linear')
+else:
+    assert False
+
+esti = OneClassEstimator(model=model).fit(graphs)
 
 print("ESTI TRAINED")
 
