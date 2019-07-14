@@ -1,4 +1,4 @@
-set data data5000
+set data data2000
 
 switch $argv[1]
 
@@ -24,7 +24,7 @@ case coarsened
                         --train_load $data/train.csv\
                         --gen_save $data/coarsened\
                         -s 5 -p 10 -n 20\
-                        --transform 1
+                        --transform 0
 case baseline_lin
     python longrange.py --n_jobs 30\
                         --train_load $data/train.csv\
@@ -37,7 +37,7 @@ case coarsened_lin
                         --train_load $data/train.csv\
                         --gen_save $data/coarsened_lin\
                         -s 5 -p 10 -n 20\
-                        --transform 1\
+                        --transform 0\
                         --svm linear
 
 end 
