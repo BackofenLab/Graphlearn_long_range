@@ -1,15 +1,15 @@
 
 set models aae char_rnn vae organ
-set models baseline_lin baseline coarsened coarsened_lin aae char_rnn vae organ
+set models  baseline coarsened  aae char_rnn vae organ
 
 #set models coarse2
 
-set data data2000
+set data data5000
 
 for model in $models
     python -W ignore scripts/eval.py  --test_path $data/test.csv\
                         --gen_path $data/$model/gen\
-                        --device cuda\
+                        --device cpu\
                         --test_scaffolds_path $data/test_scaffolds.csv\
                         --ptest_scaffolds_path $data/test_scaffolds_stats.npz > $model.tr
 end
