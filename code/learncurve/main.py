@@ -13,6 +13,10 @@ args = parser.parse_args()
 print('ARGS:',args)
 
 
+import logging
+import sys
+logging.basicConfig(stream=sys.stdout, level=5)
+
 # 1. load a negative and positive dataset and shuffle 
 
 import rdkitutils as rut 
@@ -47,14 +51,17 @@ def get_all_graphs():
 # 3. for each train set (or tupple of sets) generate new graphs 
 import graphlearn as gl
 import graphlearn.lsgg_loco as loco
+import graphlearn.lsgg as lsgg
 import graphlearn.score as score
 import graphlearn.choice as choice
 import graphlearn.test.transformutil as transformutil
 import graphlearn.sample as sample
 import basics as ba # should use this to sample later 
+from functools import partial
 def addgraphs(graphs):
     
-    grammar = loco.LOCO(  
+    #grammar = loco.LOCO(  
+    grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [1],  
                                 "loco_minsimilarity": .8, 
@@ -62,11 +69,16 @@ def addgraphs(graphs):
             filter_args={"min_cip_count": 1,                               
                          "min_interface_count": 1}
             ) 
+    grammar.fit(graphs)
     scorer = score.OneClassEstimator().fit(graphs)
     selector = choice.SelectMaxN(20)
     transformer = transformutil.no_transform()
+    print("ready to sample")
+    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector) 
 
-    return graphs + [sample.multi_sample(graph,transformer,grammar,scorer,selector) for graph in graphs  ] 
+    res  = ba.mpmap_prog(mysample,graphs,poolsize=4) 
+    return graphs + [g for glist in res for g in glist]
+    #return graphs + [nugraph for graph in graphs for nugraph in mysample(graph) ] 
 
 
 # 4. generate a learning curve
