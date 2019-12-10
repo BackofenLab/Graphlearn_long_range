@@ -97,7 +97,10 @@ def smiles_strings_to_nx(smileslist):
     # smiles strings
     for smile in smileslist:
         mol = Chem.MolFromSmiles(smile)
-        yield rdkmol_to_nx(mol)
+        if mol:
+            res=  rdkmol_to_nx(mol)
+            if len(res) > 0:
+                yield res
 
 
 ################
