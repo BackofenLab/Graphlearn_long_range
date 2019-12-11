@@ -1,4 +1,5 @@
 import graphlearn as gl
+import numpy as np
 import graphlearn.lsgg_loco as loco
 import graphlearn.lsgg as lsgg
 import graphlearn.score as score
@@ -73,9 +74,8 @@ def addgraphs(graphs):
     scorer = score.OneClassEstimator().fit(graphs)
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
-    print("ready to sample")
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
-    res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=4,chunksize=1)
+    res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=10,chunksize=1)
     return graphs + res 
 
 
@@ -84,19 +84,16 @@ def addgraphs(graphs):
 def learncurve(): 
     ptest,ntest,ptrains, ntrains = get_all_graphs()
     
-    X_test= sp.sparse.vstack( (eden.vectorize(ptest), eden.vectorize(ntest))), 
-    y_test= [1]*len(ptest)+[0]*len(ntest)
+    X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
+    y_test= np.array([1]*len(ptest)+[0]*len(ntest))
 
     for p,n in zip(ptrains,ntrains):
         pgraphs = eden.vectorize(addgraphs(p))
         ngraphs = eden.vectorize(addgraphs(n))
-        print("shape", pgraphs.shape)
-        print("shape", ngraphs.shape)
-        svc = svm.SVC().fit( sp.sparse.vstack((pgraphs,ngraphs)),[1]*pgraphs.shape[0]+[0]*ngraphs.shape[0]  ) 
+        svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((pgraphs,ngraphs)),[1]*pgraphs.shape[0]+[0]*ngraphs.shape[0]  ) 
+        print(X_test.shape,y_test.shape)
         score = svc.score(X_test,y_test )
         print(score)
-
-
 
 learncurve()
 
