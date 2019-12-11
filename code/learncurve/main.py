@@ -27,7 +27,6 @@ parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
 args = parser.parse_args()
-print('ARGS:',args)
 
 
 
@@ -36,7 +35,6 @@ def getnx(fname):
     
     cachename = fname+".cache"
     if os.path.isfile(cachename):
-        print("read from cache")
         return ba.loadfile(cachename)
     with gzip.open(fname,'rb') as fi:
         smiles = fi.read()
