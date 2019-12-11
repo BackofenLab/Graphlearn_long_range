@@ -18,6 +18,7 @@ import gzip
 import os.path
 import logging
 import sys
+import sgexec
 logging.basicConfig(stream=sys.stdout, level=5)
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
@@ -58,7 +59,6 @@ def get_all_graphs():
 # 3. for each train set (or tupple of sets) generate new graphs 
 
 def addgraphs(graphs):
-    
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
@@ -73,7 +73,8 @@ def addgraphs(graphs):
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
-    res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=10,chunksize=1)
+    #res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=10,chunksize=1)
+    res = sgexec.sgexec(mysample,graphs)
     return graphs + res 
 
 
@@ -89,7 +90,6 @@ def learncurve():
         pgraphs = eden.vectorize(addgraphs(p))
         ngraphs = eden.vectorize(addgraphs(n))
         svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((pgraphs,ngraphs)),[1]*pgraphs.shape[0]+[0]*ngraphs.shape[0]  ) 
-        print(X_test.shape,y_test.shape)
         score = svc.score(X_test,y_test )
         print(score)
 
