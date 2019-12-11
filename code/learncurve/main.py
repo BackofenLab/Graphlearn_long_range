@@ -1,8 +1,24 @@
-
-
+import graphlearn as gl
+import graphlearn.lsgg_loco as loco
+import graphlearn.lsgg as lsgg
+import graphlearn.score as score
+import graphlearn.choice as choice
+import graphlearn.test.transformutil as transformutil
+import graphlearn.sample as sample
+import basics as ba # should use this to sample later 
+from functools import partial
+import sklearn.svm as svm 
+import scipy as sp
 import argparse
 import random
 import eden.graph as eden
+import rdkitutils as rut 
+import gzip
+import os.path
+import logging
+import sys
+logging.basicConfig(stream=sys.stdout, level=5)
+
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
 parser.add_argument('--neg',type=str, help='negative dataset')
@@ -13,16 +29,8 @@ args = parser.parse_args()
 print('ARGS:',args)
 
 
-import logging
-import sys
-logging.basicConfig(stream=sys.stdout, level=5)
 
 # 1. load a negative and positive dataset and shuffle 
-
-import rdkitutils as rut 
-import gzip
-import os.path
-
 def getnx(fname):
     
     cachename = fname+".cache"
@@ -49,15 +57,7 @@ def get_all_graphs():
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
-import graphlearn as gl
-import graphlearn.lsgg_loco as loco
-import graphlearn.lsgg as lsgg
-import graphlearn.score as score
-import graphlearn.choice as choice
-import graphlearn.test.transformutil as transformutil
-import graphlearn.sample as sample
-import basics as ba # should use this to sample later 
-from functools import partial
+
 def addgraphs(graphs):
     
     #grammar = loco.LOCO(  
@@ -66,34 +66,33 @@ def addgraphs(graphs):
                                 "thickness_list": [1],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
-            filter_args={"min_cip_count": 1,                               
-                         "min_interface_count": 1}
+            filter_args={"min_cip_count": 2,                               
+                         "min_interface_count": 2}
             ) 
     grammar.fit(graphs)
     scorer = score.OneClassEstimator().fit(graphs)
-    selector = choice.SelectMaxN(20)
+    selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     print("ready to sample")
-    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector) 
-
-    res  = ba.mpmap_prog(mysample,graphs,poolsize=4) 
-    return graphs + [g for glist in res for g in glist]
-    #return graphs + [nugraph for graph in graphs for nugraph in mysample(graph) ] 
+    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
+    res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=4,chunksize=1)
+    return graphs + res 
 
 
 # 4. generate a learning curve
-import sklearn.svm as svm 
-import scipy as sp
+
 def learncurve(): 
     ptest,ntest,ptrains, ntrains = get_all_graphs()
     
-    X_test= sp.sparse.hstack( (eden.vectorize(ptest), eden.vectorize(ntest))), 
+    X_test= sp.sparse.vstack( (eden.vectorize(ptest), eden.vectorize(ntest))), 
     y_test= [1]*len(ptest)+[0]*len(ntest)
 
     for p,n in zip(ptrains,ntrains):
         pgraphs = eden.vectorize(addgraphs(p))
         ngraphs = eden.vectorize(addgraphs(n))
-        svc = svm.SVC().fit( sp.sparse.hstack(pgraphs,ngraphs),[1]*len(pgraphs)+[0]*len(ngraphs)  ) 
+        print("shape", pgraphs.shape)
+        print("shape", ngraphs.shape)
+        svc = svm.SVC().fit( sp.sparse.vstack((pgraphs,ngraphs)),[1]*pgraphs.shape[0]+[0]*ngraphs.shape[0]  ) 
         score = svc.score(X_test,y_test )
         print(score)
 
