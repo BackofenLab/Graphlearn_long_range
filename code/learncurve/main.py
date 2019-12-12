@@ -23,6 +23,7 @@ logging.basicConfig(stream=sys.stdout, level=5)
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
+parser.add_argument('--sge',type=bool,default=False, help='normal multiprocessing or sungridengine')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
@@ -70,8 +71,10 @@ def addgraphs(graphs):
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
-    #res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs))],poolsize=10,chunksize=1)
-    res = sgexec.sgexec(mysample,graphs)
+    if args.sge:
+        res = sgexec.sgexec(mysample,graphs)
+    else:
+        res  = ba.mpmap_prog(mysample,graphs[:4],poolsize=args.n_jobs,chunksize=1)
     return graphs + res 
 
 
