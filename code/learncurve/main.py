@@ -66,8 +66,9 @@ def addgraphs(graphs):
             filter_args={"min_cip_count": 2,                               
                          "min_interface_count": 2}
             ) 
-    grammar.fit(graphs)
-    scorer = score.OneClassEstimator().fit(graphs)
+    grammar.fit(graphs,n_jobs = args.n_jobs)
+    scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
+    scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
@@ -79,16 +80,23 @@ def addgraphs(graphs):
 
 
 # 4. generate a learning curve
+
+def vectorize(graphs):
+    return sp.sparse.vstack(ba.mpmap(eden.vectorize  ,[[g] for g in graphs],poolsize=args.n_jobs))
+
 def learncurve(): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs()
-    X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
+    #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
+    X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
     
     # GENERATE ESTIMATORS AND VALIDATE
     for p,n in zip(ptrains,ntrains):
-        pgraphs = eden.vectorize(addgraphs(p))
-        ngraphs = eden.vectorize(addgraphs(n))
+        #pgraphs = eden.vectorize(addgraphs(p))
+        pgraphs = vectorize(addgraphs(p))
+        #ngraphs = eden.vectorize(addgraphs(n))
+        ngraphs = vectorize(addgraphs(n))
         svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((pgraphs,ngraphs)),[1]*pgraphs.shape[0]+[0]*ngraphs.shape[0]  ) 
         score = svc.score(X_test,y_test )
         print(score)
