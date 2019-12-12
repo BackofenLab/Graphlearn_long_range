@@ -31,16 +31,14 @@ args = parser.parse_args()
 
 
 
-# 1. load a negative and positive dataset and shuffle 
+# 1. load a (shuffeled) negative and positive dataset, + cache..
 def getnx(fname):
-    
     cachename = fname+".cache"
     if os.path.isfile(cachename):
         return ba.loadfile(cachename)
     with gzip.open(fname,'rb') as fi:
         smiles = fi.read()
     atomz = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
-
     random.seed(123)
     random.shuffle(atomz)
     ba.dumpfile(atomz,cachename)
@@ -57,7 +55,6 @@ def get_all_graphs():
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
-
 def addgraphs(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
@@ -73,19 +70,19 @@ def addgraphs(graphs):
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
-    #res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs)*.1)],poolsize=10,chunksize=1)
+    #res  = ba.mpmap_prog(mysample,graphs[:int(len(graphs))],poolsize=10,chunksize=1)
     res = sgexec.sgexec(mysample,graphs)
     return graphs + res 
 
 
 # 4. generate a learning curve
-
 def learncurve(): 
+    # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs()
-    
     X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
-
+    
+    # GENERATE ESTIMATORS AND VALIDATE
     for p,n in zip(ptrains,ntrains):
         pgraphs = eden.vectorize(addgraphs(p))
         ngraphs = eden.vectorize(addgraphs(n))
