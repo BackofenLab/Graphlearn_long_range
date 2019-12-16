@@ -71,7 +71,7 @@ def addgraphs(graphs):
     scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
-    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5) 
+    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5,n_neighbors=100) 
     if args.sge:
         res = sgexec.sgexec(mysample,graphs)
     else:
