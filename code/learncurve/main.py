@@ -45,11 +45,16 @@ def getnx(fname):
     ba.dumpfile(atomz,cachename)
     return atomz
 
+def loadsmi(fname):
+    g = list(rut.smi_to_nx(fname))
+    random.seed(123)
+    random.shuffle(g)
+    return g
 
 # 2. use Y graphs for validation and an increasing rest for training
 def get_all_graphs():
-    pos = getnx(args.pos)
-    neg = getnx(args.neg)
+    pos = loadsmi(args.pos)
+    neg = loadsmi(args.neg)
     ptest,prest= pos[:args.testsize], pos[args.testsize:]
     ntest,nrest= neg[:args.testsize], neg[args.testsize:]
     return ptest,ntest,[prest[:x] for x in args.trainsizes],[nrest[:x] for x in args.trainsizes]
@@ -72,10 +77,10 @@ def addgraphs(graphs):
     selector = choice.SelectMaxN(10)
     transformer = transformutil.no_transform()
     mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5,n_neighbors=100) 
-    if args.sge:
+    if False:
         res = sgexec.sgexec(mysample,graphs)
     else:
-        res  = ba.mpmap_prog(mysample,graphs[:4],poolsize=args.n_jobs,chunksize=1)
+        res  = ba.mpmap_prog(mysample,graphs,poolsize=args.n_jobs,chunksize=1)
     return graphs + res 
 
 

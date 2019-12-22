@@ -46,10 +46,20 @@ def getnx(fname):
     return atomz
 
 
+
+def loadsmi(fname):
+    g = list(rut.smi_to_nx(fname))
+    random.seed(1337)
+    random.shuffle(g)
+    return g
+
+    
+
+
 # 2. use Y graphs for validation and an increasing rest for training
 def get_all_graphs():
-    pos = getnx(args.pos)
-    neg = getnx(args.neg)
+    pos = loadsmi(args.pos)
+    neg = loadsmi(args.neg)
     ptest,prest= pos[:args.testsize], pos[args.testsize:]
     ntest,nrest= neg[:args.testsize], neg[args.testsize:]
     return ptest,ntest,[prest[:x] for x in args.trainsizes],[nrest[:x] for x in args.trainsizes]
@@ -59,8 +69,8 @@ def get_all_graphs():
 def addgraphs(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
-            decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1],  
+            decomposition_args={"radius_list": [0,1], 
+                                "thickness_list": [2],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
             filter_args={"min_cip_count": 2,                               
@@ -69,10 +79,11 @@ def addgraphs(graphs):
     grammar.fit(graphs,n_jobs = args.n_jobs)
     scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectMaxN(10)
+    #selector = choice.SelectMaxN(10)
+    selector = choice.SelectProbN(3)
     transformer = transformutil.no_transform()
-    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=5,n_neighbors=100) 
-    return mysample,graphs 
+    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=30,n_neighbors=200) 
+    return mysample,graphs+graphs+graphs
 
 
 # 4. generate a learning curve
