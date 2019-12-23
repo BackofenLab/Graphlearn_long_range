@@ -41,6 +41,7 @@ class sgeexecuter:
             taskid =  out.split()[2][:7]
             task_ids.append(taskid)
             time.sleep(2)
+        print ("task ids", task_ids)
         while True:
            time.sleep(5)
            qstat = ba.shexec("qstat")[2]

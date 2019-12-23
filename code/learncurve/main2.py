@@ -49,7 +49,7 @@ def getnx(fname):
 
 def loadsmi(fname):
     g = list(rut.smi_to_nx(fname))
-    random.seed(1337)
+    random.seed(1338)
     random.shuffle(g)
     return g
 
@@ -70,7 +70,7 @@ def addgraphs(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1], 
-                                "thickness_list": [2],  
+                                "thickness_list": [1],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
             filter_args={"min_cip_count": 2,                               
@@ -82,7 +82,13 @@ def addgraphs(graphs):
     #selector = choice.SelectMaxN(10)
     selector = choice.SelectProbN(3)
     transformer = transformutil.no_transform()
-    mysample = partial(sample.multi_sample, transformer=transformer,grammar=grammar,scorer=scorer,selector=selector,n_steps=30,n_neighbors=200) 
+    mysample = partial(sample.multi_sample,
+                        transformer=transformer,
+                        grammar=grammar,
+                        scorer=scorer,
+                        selector=selector,
+                        n_steps=10,
+                        n_neighbors=200) 
     return mysample,graphs+graphs+graphs
 
 
@@ -107,7 +113,7 @@ def learncurve():
     #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
     X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
-    scorer = lambda x,y: getscore(x,y,X_test,y_test)
+    scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
 
     # send all the jobs
     executer = sge()
