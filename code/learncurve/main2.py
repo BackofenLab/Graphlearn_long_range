@@ -79,16 +79,11 @@ def addgraphs(graphs):
     grammar.fit(graphs,n_jobs = args.n_jobs)
     scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    #selector = choice.SelectMaxN(10)
-    selector = choice.SelectProbN(3)
+    selector = choice.SelectProbN(1)
     transformer = transformutil.no_transform()
-    mysample = partial(sample.multi_sample,
-                        transformer=transformer,
-                        grammar=grammar,
-                        scorer=scorer,
-                        selector=selector,
-                        n_steps=10,
-                        n_neighbors=200) 
+    # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
+    mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=50) 
+
     return mysample,graphs+graphs+graphs
 
 
