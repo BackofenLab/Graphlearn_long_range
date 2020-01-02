@@ -19,7 +19,7 @@ import os.path
 import logging
 import sys
 import sgexec
-logging.basicConfig(stream=sys.stdout, level=5)
+logging.basicConfig(stream=sys.stdout, level=50)
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
@@ -35,23 +35,29 @@ args = parser.parse_args()
 
 
 # 1. load a (shuffeled) negative and positive dataset, + cache..
-def getnx(fname):
+def getnx(fname,randseed=123):
+
+    '''can we load from cache?'''
     cachename = fname+".cache"
     if os.path.isfile(cachename):
-        return ba.loadfile(cachename)
-    with gzip.open(fname,'rb') as fi:
-        smiles = fi.read()
-    atomz = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
-    random.seed(123)
-    random.shuffle(atomz)
-    ba.dumpfile(atomz,cachename)
-    return atomz
+        graphs = ba.loadfile(cachename)
+    else:
+        '''if not load normaly and write a cache'''
+        with gzip.open(fname,'rb') as fi:
+            smiles = fi.read()
+        graphs = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
+        ba.dumpfile(atomz,cachename)
+
+    '''shuffle and return'''
+    random.seed(randseed)
+    random.shuffle(graphs)
+    return graphs
 
 
 
-def loadsmi(fname):
+def loadsmi(fname,randseed = 123):
     g = list(rut.smi_to_nx(fname))
-    random.seed(1338)
+    random.seed(randseed)
     random.shuffle(g)
     return g
 
@@ -59,9 +65,9 @@ def loadsmi(fname):
 
 
 # 2. use Y graphs for validation and an increasing rest for training
-def get_all_graphs():
-    pos = loadsmi(args.pos) if "bursi" in args.pos else getnx(args.pos)
-    neg = loadsmi(args.neg) if "bursi" in args.neg else getnx(args.neg)
+def get_all_graphs(randseed = 123):
+    pos = loadsmi(args.pos,randseed) if "bursi" in args.pos else getnx(args.pos,randseed)
+    neg = loadsmi(args.neg,randseed) if "bursi" in args.neg else getnx(args.neg,randseed)
     print("lenpos:", len(pos))
     print("lenneg:", len(neg))
     ptest,prest= pos[:args.testsize], pos[args.testsize:]
@@ -83,10 +89,10 @@ def addgraphs(graphs):
             ) 
     grammar.fit(graphs,n_jobs = args.n_jobs)
     #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
-    scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs).fit(graphs)
+    scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     #selector = choice.SelectProbN(1)
-    selector = choice.SelectClassic(reg=.97)
+    selector = choice.SelectClassic(reg=.80) # linear kernel -> .8 , rbf kernel -> .97? 
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
     # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
@@ -95,7 +101,7 @@ def addgraphs(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=25) 
+            n_steps=50) 
     
     #print (mysample(graphs[0]))
     #exit()
@@ -103,23 +109,24 @@ def addgraphs(graphs):
 
 
 # 4. generate a learning curve
-
 def vectorize(graphs):
     return sp.sparse.vstack(ba.mpmap(eden.vectorize  ,[[g] for g in graphs],poolsize=args.n_jobs))
 
 
 from sgexec import sgeexecuter as sge
-
-
 def getscore(gp, gn,xt,yt): 
     gpp = vectorize(gp)
     gnn = vectorize(gn)
     svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((gpp,gnn)),[1]*gpp.shape[0]+[0]*gnn.shape[0]  ) 
     return  svc.score(xt,yt )
 
-def learncurve(): 
+
+
+
+
+def learncurve(randseed=123): 
     # SET UP VALIDATION SET
-    ptest,ntest,ptrains, ntrains = get_all_graphs()
+    ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
     #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
     print("got graphs.. setting up")
     X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
@@ -146,15 +153,18 @@ def learncurve():
   
     res = res [::-1] # pop will pop from the end...  
 
-    
-
     # print curve
+    myscore   = []
+    baseline = []
     for p,n in zip(ptrains,ntrains):
         gp = res.pop()
         gn = res.pop()
         score  = scorer(gp+p, gn+n)
         score2  = scorer(p,n)
-        print(score, score2, [len(x) for x in [gp,gn,p,n]])
+        myscore.append(score)
+        baseline.append(score2)
+    return myscore,baseline 
 
-learncurve()
-
+a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
+print([ np.mean(x) for x in list(zip(*a))  ] )
+print([ np.mean(x) for x in list(zip(*b))  ] )
