@@ -23,7 +23,9 @@ logging.basicConfig(stream=sys.stdout, level=5)
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
-parser.add_argument('--sge',type=bool,default=False, help='normal multiprocessing or sungridengine')
+#parser.add_argument('--sge',type=bool,default=False, help='normal multiprocessing or sungridengine')
+parser.add_argument('--sge', dest='sge', action='store_true')
+parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
@@ -58,18 +60,21 @@ def loadsmi(fname):
 
 # 2. use Y graphs for validation and an increasing rest for training
 def get_all_graphs():
-    pos = loadsmi(args.pos)
-    neg = loadsmi(args.neg)
+    pos = loadsmi(args.pos) if "bursi" in args.pos else getnx(args.pos)
+    neg = loadsmi(args.neg) if "bursi" in args.neg else getnx(args.neg)
+    print("lenpos:", len(pos))
+    print("lenneg:", len(neg))
     ptest,prest= pos[:args.testsize], pos[args.testsize:]
     ntest,nrest= neg[:args.testsize], neg[args.testsize:]
     return ptest,ntest,[prest[:x] for x in args.trainsizes],[nrest[:x] for x in args.trainsizes]
+
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
 def addgraphs(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
-            decomposition_args={"radius_list": [0,1], 
+            decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [1],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
@@ -77,14 +82,24 @@ def addgraphs(graphs):
                          "min_interface_count": 2}
             ) 
     grammar.fit(graphs,n_jobs = args.n_jobs)
-    scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
+    #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
+    scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectProbN(1)
+    #selector = choice.SelectProbN(1)
+    selector = choice.SelectClassic(reg=.97)
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
-    mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=50) 
-
-    return mysample,graphs+graphs+graphs
+    # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
+    mysample = partial(sample.sample_sizeconstraint,penalty=0.0,
+            transformer=transformer, 
+            grammar=grammar, 
+            scorer=scorer, 
+            selector=selector, 
+            n_steps=25) 
+    
+    #print (mysample(graphs[0]))
+    #exit()
+    return mysample,graphs
 
 
 # 4. generate a learning curve
@@ -106,17 +121,31 @@ def learncurve():
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs()
     #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
+    print("got graphs.. setting up")
     X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
     scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
 
     # send all the jobs
-    executer = sge()
-    for p,n in zip(ptrains,ntrains):
-        executer.add_job(*addgraphs(p))
-        executer.add_job(*addgraphs(n))
-    # execute all the jobs
-    res = executer.execute()[::-1] # reverse because pop will pop from the end
+    
+    if args.sge:
+        print("sge setup")
+        executer = sge()
+        for p,n in zip(ptrains,ntrains):
+            executer.add_job(*addgraphs(p))
+            executer.add_job(*addgraphs(n))
+        # execute all the jobs
+        print("sge execuging")
+        res = executer.execute()
+    else:
+        print("using local cores")
+        res = []
+        for p,n in zip(ptrains,ntrains):
+            res.append(ba.mpmap_prog(*addgraphs(p), poolsize = args.n_jobs, chunksize=1))
+            res.append(ba.mpmap_prog(*addgraphs(n), poolsize = args.n_jobs, chunksize=1))
+  
+    res = res [::-1] # pop will pop from the end...  
+
     
 
     # print curve

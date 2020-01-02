@@ -1,7 +1,6 @@
 #!/bin/bash
 #$ -cwd
 #$ -l h_vmem=4G
-#$ -M mautner@cs.uni-freiburg.de
 #$ -m as
 ##$ -pe smp 4
 #$ -R y
