@@ -84,7 +84,7 @@ def addgraphs(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1],  
+                                "thickness_list": [1,2],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
             filter_args={"min_cip_count": 2,                               
@@ -95,7 +95,7 @@ def addgraphs(graphs):
     scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     #selector = choice.SelectProbN(1)
-    selector = choice.SelectClassic(reg=.85) # linear kernel -> .8 , rbf kernel -> .97? 
+    selector = choice.SelectClassic(reg=0) # linear kernel -> .8 , rbf kernel -> .97? 
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
     # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
