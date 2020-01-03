@@ -6,9 +6,6 @@
 # USAGE:
 #python3 mosesmkdata.py --neg AID/bursi_neg.smi --pos AID/bursi_pos.smi --testsize 500 --trainsize 100 200 300 400
 
-# 
-
-
 import main2 as main 
 import os 
 import rdkitutils as rdk
@@ -17,8 +14,8 @@ os.mkdir("newtraindata")
 
 def mk1set(ind ,randseed):
     p,n,ptrain,ntrain = main.get_all_graphs(randseed)
-    rdk.nx_to_moses(p,f"ptest_{ind}.csv")
-    rdk.nx_to_moses(n,f"ntest_{ind}.csv")
+    rdk.nx_to_moses(p,f"newtraindata/ptest_{ind}.csv")
+    rdk.nx_to_moses(n,f"newtraindata/ntest_{ind}.csv")
     for pt in ptrain:
         di=f"newtraindata/p{len(pt)}_{ind}"
         os.mkdir(di)

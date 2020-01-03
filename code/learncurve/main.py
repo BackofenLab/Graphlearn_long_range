@@ -1,3 +1,7 @@
+
+
+# NOT USED ANYMORE... SEE MAIN2 
+
 import graphlearn as gl
 import numpy as np
 import graphlearn.lsgg_loco as loco
