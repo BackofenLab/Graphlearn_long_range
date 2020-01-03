@@ -2,7 +2,12 @@
 
 # we just make a folder with all the data...  args(mostly file-paths) will be taken care of by main2.py
 
-# usage this.py --neg path --pos filepath --testsize 1000 --trainsize 100 200 300
+
+# USAGE:
+#python3 mosesmkdata.py --neg AID/bursi_neg.smi --pos AID/bursi_pos.smi --testsize 500 --trainsize 100 200 300 400
+
+# 
+
 
 import main2 as main 
 import os 
