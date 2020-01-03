@@ -115,6 +115,18 @@ def nx_to_smi(graphs, file):
         f.write("SMILES\n")
         f.write('\n'.join(smis))
 
+def nx_to_moses(graphs, file,split='train'):
+    # writes smiles strings to a file
+    chem = [nx_to_rdkit(graph) for graph in graphs]
+    smis = [Chem.MolToSmiles(m)+f",{split}" for m in chem]
+    with open(file, 'w') as f:
+        f.write(f"SMILES,SPLIT\n")
+        f.write('\n'.join(smis))
+
+def moses_to_nx(file):
+    with open(file,'w') as f:
+        z=f.read()[1:]
+        return smiles_strings_to_nx([x.split(',')[0] for line in z if len(line)>3])
 
 def nx_to_rdkit(graph):
     m = Chem.MolFromSmiles('')

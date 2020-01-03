@@ -124,20 +124,22 @@ def getscore(gp, gn,xt,yt):
     return  svc.score(xt,yt )
 
 
-
-
+def make_scorer(ptest,ntest):
+    X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
+    y_test= np.array([1]*len(ptest)+[0]*len(ntest))
+    return lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
 
 def learncurve(randseed=123): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
     #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
     print("got graphs.. setting up")
-    X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
-    y_test= np.array([1]*len(ptest)+[0]*len(ntest))
-    scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
+    #X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
+    #y_test= np.array([1]*len(ptest)+[0]*len(ntest))
+    #scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
+    scorer = make_scorer(ptest,ntest)
 
     # send all the jobs
-    
     if args.sge:
         print("sge setup")
         executer = sge()
@@ -168,6 +170,7 @@ def learncurve(randseed=123):
         baseline.append(score2)
     return myscore,baseline 
 
-a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
-print([ np.mean(x) for x in list(zip(*a))  ] )
-print([ np.mean(x) for x in list(zip(*b))  ] )
+if __name__ == "__main__":
+    a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
+    print([ np.mean(x) for x in list(zip(*a))  ] )
+    print([ np.mean(x) for x in list(zip(*b))  ] )
