@@ -137,7 +137,6 @@ def learncurve(randseed=123):
     scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
 
     # send all the jobs
-    
     if args.sge:
         print("sge setup")
         executer = sge()
@@ -168,6 +167,7 @@ def learncurve(randseed=123):
         baseline.append(score2)
     return myscore,baseline 
 
-a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
-print([ np.mean(x) for x in list(zip(*a))  ] )
-print([ np.mean(x) for x in list(zip(*b))  ] )
+if __name__ == "__main__":
+    a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
+    print([ np.mean(x) for x in list(zip(*a))  ] )
+    print([ np.mean(x) for x in list(zip(*b))  ] )
