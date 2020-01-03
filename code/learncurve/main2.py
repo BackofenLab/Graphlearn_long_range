@@ -21,6 +21,9 @@ import sys
 import sgexec
 logging.basicConfig(stream=sys.stdout, level=50)
 
+from rdkit import rdBase
+rdBase.DisableLog('rdApp.*')
+
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
 #parser.add_argument('--sge',type=bool,default=False, help='normal multiprocessing or sungridengine')
@@ -92,7 +95,7 @@ def addgraphs(graphs):
     scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     #selector = choice.SelectProbN(1)
-    selector = choice.SelectClassic(reg=.80) # linear kernel -> .8 , rbf kernel -> .97? 
+    selector = choice.SelectClassic(reg=.85) # linear kernel -> .8 , rbf kernel -> .97? 
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
     # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
@@ -101,7 +104,7 @@ def addgraphs(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=50) 
+            n_steps=30) 
     
     #print (mysample(graphs[0]))
     #exit()
