@@ -2,7 +2,7 @@ import time
 import basics as ba
 import subprocess
 import pickle
-
+import random
 
 
 def collectresults(jobid,numtasks):
@@ -11,45 +11,49 @@ def collectresults(jobid,numtasks):
 
 def sgexec(func,iterab): 
     # to file
-    pickle.dump( (func,iterab), open( "tasks0.pickle", "wb" ) )
+    jobname = hash(random.random())
+    pickle.dump( (func,iterab), open( f"tasks{jobname}.pickle", "wb" ) )
     # qsub
-    ret,stderr,out = ba.shexec("qsub -V -t 1-%d  sgexec.sh 0"  % len(iterab))
+    ret,stderr,out = ba.shexec(f"qsub -V -t 1-{len(iterab)}  sgexec.sh {jobname}")
     taskid =  out.split()[2][:7]
     print ('taskid:',taskid)
     time.sleep(2)
     while taskid in ba.shexec("qstat")[2]:
         time.sleep(5)
 
-    return collectresults(0,len(iterab))
+    return collectresults(jobname,len(iterab))
 
 
 class sgeexecuter: 
     
     def __init__(self):
         self.lenlist = [] 
+        self.jobnames = []
 
     def add_job(self,func,iterab):
-        nujobid = len(self.lenlist)
+        nujobid = hash(random.random())
         pickle.dump( (func,iterab), open( "tasks%d.pickle" % nujobid,"wb" ) )
+        self.jobnames.append(nujobid)
         self.lenlist.append(len(iterab))
 
     def execute(self):
         # start jobs 
-        task_ids =  []
-        for jobid,size in enumerate(self.lenlist):
+        sge_job_ids =  []
+        for jobid,size in zip(self.jobnames, self.lenlist):
             ret,stderr,out = ba.shexec("qsub -V -t 1-%d  sgexec.sh %d"  %(size,jobid)) 
             taskid =  out.split()[2][:7]
-            task_ids.append(taskid)
+            sge_job_ids.append(taskid)
             time.sleep(2)
-        print ("task ids", task_ids)
+        print ("task ids", sge_job_ids)
         while True:
            time.sleep(5)
            qstat = ba.shexec("qstat")[2]
-           if not any([tid in qstat for tid in task_ids ]):
+           if not any([tid in qstat for tid in sge_job_ids ]):
                break
 
-        results = [ collectresults(jobid,numtasks) for jobid,numtasks in enumerate(self.lenlist) ]
+        results = [ collectresults(jobid,numtasks) for jobid,numtasks in zip(self.jobnames,self.lenlist) ]
         self.lenlist=[]
+        self.jobnames=[]
         return results
 
 
