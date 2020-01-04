@@ -1,4 +1,5 @@
-models =['aae','char_rnn','vae','organ']
+#models =['aae','char_rnn','vae','organ']
+models =['char_rnn','vae'] # organ fails to run
 repeats = list(range(3))
 trainsizes =[100,200,300,400]
 
@@ -7,6 +8,7 @@ trainsizes =[100,200,300,400]
 # so moses wrote in there.. 
 path = 'newtraindata'
 import rdkitutils as rdk
+import numpy as np
 import main2 as main
 
 def lc(model='aae',rep=0):
@@ -18,10 +20,10 @@ def lc(model='aae',rep=0):
     for size in trainsizes: 
         p = rdk.moses_to_nx(f"{path}/p{size}_{rep}/train.csv")
         n = rdk.moses_to_nx(f"{path}/n{size}_{rep}/train.csv")
-        op = rdk.smi_to_nx(f"{path}/p{size}_{rep}/{model}/gen")
-        on = rdk.smi_to_nx(f"{path}/n{size}_{rep}/{model}/gen")
-        ms.append(p+op,n+on)
-        base.append(p,n)
+        op = list(rdk.smi_to_nx(f"{path}/p{size}_{rep}/{model}/gen"))
+        on = list(rdk.smi_to_nx(f"{path}/n{size}_{rep}/{model}/gen"))
+        ms.append(scorer(p+op,n+on))
+        base.append(scorer(p,n))
     return ms,base
 
 for model in models:

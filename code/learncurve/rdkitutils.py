@@ -124,9 +124,10 @@ def nx_to_moses(graphs, file,split='train'):
         f.write('\n'.join(smis))
 
 def moses_to_nx(file):
-    with open(file,'w') as f:
-        z=f.read()[1:]
-        return smiles_strings_to_nx([x.split(',')[0] for line in z if len(line)>3])
+    with open(file,'r') as f:
+        z=f.read().split('\n')[1:]
+        smi = [line.split(',')[0] for line in z if len(line)>3]
+        return list(smiles_strings_to_nx(smi))
 
 def nx_to_rdkit(graph):
     m = Chem.MolFromSmiles('')

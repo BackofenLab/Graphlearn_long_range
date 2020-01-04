@@ -10,18 +10,20 @@ import main2 as main
 import os 
 import rdkitutils as rdk
 
-os.mkdir("newtraindata")
+
+foldername = 'newtraindata2'
+os.mkdir(foldername)
 
 def mk1set(ind ,randseed):
     p,n,ptrain,ntrain = main.get_all_graphs(randseed)
-    rdk.nx_to_moses(p,f"newtraindata/ptest_{ind}.csv")
-    rdk.nx_to_moses(n,f"newtraindata/ntest_{ind}.csv")
+    rdk.nx_to_moses(p,f"{foldername}/ptest_{ind}.csv")
+    rdk.nx_to_moses(n,f"{foldername}/ntest_{ind}.csv")
     for pt in ptrain:
-        di=f"newtraindata/p{len(pt)}_{ind}"
+        di=f"{foldername}/p{len(pt)}_{ind}"
         os.mkdir(di)
         rdk.nx_to_moses(pt,di+'/train.csv')
     for nt in ntrain:
-        di=f"newtraindata/n{len(nt)}_{ind}"
+        di=f"{foldername}/n{len(nt)}_{ind}"
         os.mkdir(di)
         rdk.nx_to_moses(nt,di+'/train.csv')
 
