@@ -19,7 +19,7 @@ import os.path
 import logging
 import sys
 import sgexec
-logging.basicConfig(stream=sys.stdout, level=50)
+logging.basicConfig(stream=sys.stdout, level=5)
 
 from rdkit import rdBase
 rdBase.DisableLog('rdApp.*')
@@ -32,7 +32,10 @@ parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
+parser.add_argument('--n_steps',type=int,default=15, help='how many times we propose new graphs during sampling')
+parser.add_argument('--size_score_penalty',type=float,default=0.0, help='percentage of points reduced for each node that a graph is too large')
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
+parser.add_argument('--repeatseeds',type=int,default=[1,2,3],nargs='+', help='list of seeds for repeats.. more seeds means more repeats')
 args = parser.parse_args()
 
 
@@ -87,8 +90,8 @@ def addgraphs(graphs):
                                 "thickness_list": [1,2],  
                                 "loco_minsimilarity": .8, 
                                 "thickness_loco": 4},
-            filter_args={"min_cip_count": 2,                               
-                         "min_interface_count": 2}
+            filter_args={"min_cip_count": 1,                               
+                         "min_interface_count": 1}
             ) 
     grammar.fit(graphs,n_jobs = args.n_jobs)
     #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
@@ -99,12 +102,12 @@ def addgraphs(graphs):
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
     # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
-    mysample = partial(sample.sample_sizeconstraint,penalty=0.0,
+    mysample = partial(sample.sample_sizeconstraint,penalty=args.size_score_penalty,
             transformer=transformer, 
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=30) 
+            n_steps=args.n_steps) 
     
     #print (mysample(graphs[0]))
     #exit()
@@ -161,16 +164,17 @@ def learncurve(randseed=123):
     # print curve
     myscore   = []
     baseline = []
+    genscore = []
     for p,n in zip(ptrains,ntrains):
         gp = res.pop()
         gn = res.pop()
-        score  = scorer(gp+p, gn+n)
-        score2  = scorer(p,n)
-        myscore.append(score)
-        baseline.append(score2)
-    return myscore,baseline 
+        myscore.append(scorer(gp+p, gn+n))
+        baseline.append(scorer(p,n))
+        genscore.append(scorer(gp,gn))
+    return myscore,baseline,genscore
 
 if __name__ == "__main__":
-    a,b = list(zip(*[learncurve(x) for x in [1,2,3]]))
-    print([ np.mean(x) for x in list(zip(*a))  ] )
-    print([ np.mean(x) for x in list(zip(*b))  ] )
+    a,b,c = list(zip(*[learncurve(x) for x in args.repeatseeds]))
+    print('combined',      [ np.mean(x) for x in list(zip(*a))  ] )
+    print('originals only',[ np.mean(x) for x in list(zip(*b))  ] )
+    print('generated only',[ np.mean(x) for x in list(zip(*c))  ] )
