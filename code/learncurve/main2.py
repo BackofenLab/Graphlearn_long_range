@@ -26,12 +26,12 @@ rdBase.DisableLog('rdApp.*')
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
-#parser.add_argument('--sge',type=bool,default=False, help='normal multiprocessing or sungridengine')
 parser.add_argument('--sge', dest='sge', action='store_true')
 parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
+parser.add_argument('--max_graph_growth',type=int,default= 999, help='sampling filters cips by size')
 parser.add_argument('--n_steps',type=int,default=15, help='how many times we propose new graphs during sampling')
 parser.add_argument('--size_score_penalty',type=float,default=0.0, help='percentage of points reduced for each node that a graph is too large')
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
@@ -84,14 +84,15 @@ def get_all_graphs(randseed = 123):
 
 # 3. for each train set (or tupple of sets) generate new graphs 
 def addgraphs(graphs):
-    #grammar = loco.LOCO(  
-    grammar = lsgg.lsgg(
+    grammar = loco.LOCO(  
+    #grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1,2],  
-                                "loco_minsimilarity": .8, 
-                                "thickness_loco": 4},
+                                "thickness_list": [1],  
+                                "loco_minsimilarity": .3, 
+                                "thickness_loco": 2},
             filter_args={"min_cip_count": 1,                               
-                         "min_interface_count": 1}
+                         "min_interface_count": 1},
+            maxgrowth  = args.max_graph_growth
             ) 
     grammar.fit(graphs,n_jobs = args.n_jobs)
     #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
@@ -102,12 +103,15 @@ def addgraphs(graphs):
     transformer = transformutil.no_transform()
     # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
     # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
-    mysample = partial(sample.sample_sizeconstraint,penalty=args.size_score_penalty,
+    
+    sampler = sample.sampler(
             transformer=transformer, 
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
             n_steps=args.n_steps) 
+
+    mysample = partial(sampler.sample_sizeconstraint,penalty=args.size_score_penalty)
     
     #print (mysample(graphs[0]))
     #exit()

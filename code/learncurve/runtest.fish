@@ -6,11 +6,11 @@
 
 python3 main2.py\
     --n_jobs 24\
-    --no-sge\
+    --sge\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
     --testsize 50\
-    --trainsize 25 50\
+    --trainsize 100 100\
     --repeatseeds 1 2 
 
 #cat /home/mautner/scratch/logfiles/ld_o/*
