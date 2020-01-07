@@ -13,7 +13,6 @@ import scipy as sp
 import argparse
 import random
 import eden.graph as eden
-import rdkitutils as rut 
 import gzip
 import os.path
 import logging
@@ -90,8 +89,12 @@ def addgraphs(graphs):
     return mysample,graphs
 
 
+res = sgexec(*addgraphs(graphs))
 
 
 #############
 #  somehow save the outputs in readable format 
 #################
+rdk.nx_to_smi(res,args.gen_save)
+open(args.gen_save+".args","w").write(str(args))
+
