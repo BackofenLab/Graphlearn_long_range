@@ -96,7 +96,7 @@ def addgraphs(graphs):
             ) 
     grammar.fit(graphs,n_jobs = args.n_jobs)
     #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
-    scorer = score.OneClassAndSizeFactor(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     #selector = choice.SelectProbN(1)
     selector = choice.SelectClassic(reg=0) # linear kernel -> .8 , rbf kernel -> .97? 
@@ -111,7 +111,7 @@ def addgraphs(graphs):
             selector=selector, 
             n_steps=args.n_steps) 
 
-    mysample = partial(sampler.sample_sizeconstraint,penalty=args.size_score_penalty)
+    mysample = partial(sampler.sample)
     
     #print (mysample(graphs[0]))
     #exit()
