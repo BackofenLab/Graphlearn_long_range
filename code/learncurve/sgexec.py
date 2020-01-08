@@ -40,7 +40,7 @@ class sgeexecuter:
         # start jobs 
         sge_job_ids =  []
         for jobid,size in zip(self.jobnames, self.lenlist):
-            ret,stderr,out = ba.shexec("qsub -V -t 1-%d  sgexec.sh %d"  %(size,jobid)) 
+            ret,stderr,out = ba.shexec("qsub -V -t 1-%d  ~/.config/scripts/sgexec.sh %d"  %(size,jobid)) 
             taskid =  out.split()[2][:7]
             sge_job_ids.append(taskid)
             time.sleep(2)

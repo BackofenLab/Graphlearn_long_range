@@ -182,3 +182,6 @@ if __name__ == "__main__":
     print('combined',      [ np.mean(x) for x in list(zip(*a))  ] )
     print('originals only',[ np.mean(x) for x in list(zip(*b))  ] )
     print('generated only',[ np.mean(x) for x in list(zip(*c))  ] )
+    print('combined',      [ np.std(x) for x in list(zip(*a))  ] )
+    print('originals only',[ np.std(x) for x in list(zip(*b))  ] )
+    print('generated only',[ np.std(x) for x in list(zip(*c))  ] )
