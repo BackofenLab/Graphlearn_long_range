@@ -26,6 +26,8 @@ rdBase.DisableLog('rdApp.*')
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
+parser.add_argument('--emit',type=int, help='emit every x graphs')
+parser.add_argument('--burnin',type=int, help='start emiting after this many steps')
 parser.add_argument('--sge', dest='sge', action='store_true')
 parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
@@ -84,8 +86,8 @@ def get_all_graphs(randseed = 123):
 
 # 3. for each train set (or tupple of sets) generate new graphs 
 def addgraphs(graphs):
-    grammar = loco.LOCO(  
-    #grammar = lsgg.lsgg(
+    #grammar = loco.LOCO(  
+    grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [1],  
                                 "loco_minsimilarity": .3, 
@@ -94,40 +96,39 @@ def addgraphs(graphs):
                          "min_interface_count": 1},
             maxgrowth  = args.max_graph_growth
             ) 
+
+    assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
-    #scorer = score.OneClassEstimator(n_jobs=args.n_jobs).fit(graphs)
-    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+            model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    #selector = choice.SelectProbN(1)
-    selector = choice.SelectClassic(reg=0) # linear kernel -> .8 , rbf kernel -> .97? 
+    selector = choice.SelectClassic(reg=0) 
     transformer = transformutil.no_transform()
-    # multi sample: mysample = partial(sample.multi_sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20, n_neighbors=200) 
-    # mysample = partial(sample.sample, transformer=transformer, grammar=grammar, scorer=scorer, selector=selector, n_steps=20) 
     
     sampler = sample.sampler(
             transformer=transformer, 
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=args.n_steps) 
-
-    mysample = partial(sampler.sample)
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     
-    #print (mysample(graphs[0]))
-    #exit()
-    return mysample,graphs
+
+    
+    return sampler.sample_burnin,graphs
 
 
 # 4. generate a learning curve
 def vectorize(graphs):
-    return sp.sparse.vstack(ba.mpmap(eden.vectorize  ,[[g] for g in graphs],poolsize=args.n_jobs))
+    return sp.sparse.vstack(ba.mpmap(eden.vectorize,
+        [[g] for g in graphs],poolsize=args.n_jobs))
 
 
 from sgexec import sgeexecuter as sge
 def getscore(gp, gn,xt,yt): 
     gpp = vectorize(gp)
     gnn = vectorize(gn)
-    svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((gpp,gnn)),[1]*gpp.shape[0]+[0]*gnn.shape[0]  ) 
+    svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((gpp,gnn)),
+            [1]*gpp.shape[0]+[0]*gnn.shape[0]  ) 
     return  svc.score(xt,yt )
 
 
@@ -139,11 +140,7 @@ def make_scorer(ptest,ntest):
 def learncurve(randseed=123): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
-    #X_test= sp.sparse.vstack((eden.vectorize(ptest), eden.vectorize(ntest)))
     print("got graphs.. setting up")
-    #X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
-    #y_test= np.array([1]*len(ptest)+[0]*len(ntest))
-    #scorer = lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
     scorer = make_scorer(ptest,ntest)
 
     # send all the jobs
@@ -160,8 +157,10 @@ def learncurve(randseed=123):
         print("using local cores")
         res = []
         for p,n in zip(ptrains,ntrains):
-            res.append(ba.mpmap_prog(*addgraphs(p), poolsize = args.n_jobs, chunksize=1))
-            res.append(ba.mpmap_prog(*addgraphs(n), poolsize = args.n_jobs, chunksize=1))
+            res.append(ba.mpmap_prog(*addgraphs(p),
+                poolsize = args.n_jobs, chunksize=1))
+            res.append(ba.mpmap_prog(*addgraphs(n),
+                poolsize = args.n_jobs, chunksize=1))
   
     res = res [::-1] # pop will pop from the end...  
 
@@ -172,6 +171,9 @@ def learncurve(randseed=123):
     for p,n in zip(ptrains,ntrains):
         gp = res.pop()
         gn = res.pop()
+        if isinstance(gp[0],list):
+            gp = [g for gl in gp for g in gl]
+            gn = [g for gl in gn for g in gl]
         myscore.append(scorer(gp+p, gn+n))
         baseline.append(scorer(p,n))
         genscore.append(scorer(gp,gn))

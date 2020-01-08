@@ -5,13 +5,16 @@
 #rm res/*
 
 python3 main2.py\
-    --n_jobs 24\
-    --sge\
+    --n_jobs 8\
+    --no-sge\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
-    --testsize 50\
-    --trainsize 100 100\
-    --repeatseeds 1 2 
+    --testsize 500\
+    --burnin 8\
+    --emit 5\
+    --n_steps 30\
+    --trainsize 50 50\
+    --repeatseeds 1 
 
 #cat /home/mautner/scratch/logfiles/ld_o/*
 #cat /home/mautner/scratch/logfiles/ld_e/*
