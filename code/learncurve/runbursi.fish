@@ -8,10 +8,13 @@ python3 main2.py --n_jobs 24\
                  --neg AID/bursi_neg.smi\
                  --pos AID/bursi_pos.smi\
                  --testsize 500\
+                 --burnin 8\
+                 --emit 5\
+                 --n_steps 30\
                  --repeatseeds 1337 42 2\
                  --n_steps 50\
                  --size_score_penalty 0.0\
-                 --trainsize 100 200 300 400 
+                 --trainsize 200 400 600 800
 
 cat /home/mautner/scratch/logfiles/ld_o/*
 cat /home/mautner/scratch/logfiles/ld_e/*

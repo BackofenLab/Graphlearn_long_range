@@ -5,8 +5,8 @@
 #rm res/*
 
 python3 main2.py\
-    --n_jobs 8\
-    --no-sge\
+    --n_jobs 24\
+    --sge\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
     --testsize 500\
