@@ -1,6 +1,8 @@
 import graphlearn as gl
 import numpy as np
 import graphlearn.lsgg_loco as loco
+import graphlearn.lsgg_layered as lsggl 
+from graphlearn.test.cycler import Cycler
 import graphlearn.lsgg as lsgg
 import graphlearn.score as score
 import graphlearn.choice as choice
@@ -84,12 +86,35 @@ def get_all_graphs(randseed = 123):
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
-def priosim(graphs):
-    #grammar = loco.LOCO(  
+def classic(graphs):
     grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
+                                "thickness_list": [1]
+                               },
+            filter_args={"min_cip_count": 1,                               
+                         "min_interface_count": 1}
+            ) 
+    assert len(graphs) > 10
+    grammar.fit(graphs,n_jobs = args.n_jobs)
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+            model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    scorer.n_jobs=1 # demons cant spawn children
+    selector = choice.SelectClassic(reg=0) 
+    transformer = transformutil.no_transform()
+    
+    sampler = sample.sampler(
+            transformer=transformer, 
+            grammar=grammar, 
+            scorer=scorer, 
+            selector=selector, 
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
+    return sampler.sample_burnin,graphs
+
+def priosim(graphs):
+    grammar = loco.LOCO(  
+            decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [1],  
-                                "loco_minsimilarity": .3, 
+                                "loco_minsimilarity": .3,  # this is not relevant anymore
                                 "thickness_loco": 2},
             filter_args={"min_cip_count": 1,                               
                          "min_interface_count": 1}
@@ -109,6 +134,60 @@ def priosim(graphs):
             selector=selector, 
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
+
+def coarse(graphs):
+    # UNTESTED
+    grammar = lsggl(  
+            decomposition_args={"radius_list": [0,1,2], 
+                                "thickness_list": [1],  
+                                "base_thickness_list": [2]
+                                },
+            filter_args={"min_cip_count": 1,                               
+                         "min_interface_count": 1}
+            ) 
+    assert len(graphs) > 10
+    c= Cycler()
+    grammar.fit([c(x) for x in graphs],n_jobs = args.n_jobs)
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+            model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    scorer.n_jobs=1 # demons cant spawn children
+    selector = choice.SelectClassic(reg=0) 
+    
+    sampler = sample.sampler(
+            transformer=c, 
+            grammar=grammar, 
+            scorer=scorer, 
+            selector=selector, 
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
+    return sampler.sample_burnin,graphs
+
+def coarseLOCO(graphs):
+    # TODO  
+    # this is just a copy of loco so far
+    grammar = loco.LOCO(  
+            decomposition_args={"radius_list": [0,1,2], 
+                                "thickness_list": [1],  
+                                "loco_minsimilarity": .3,  # this is not relevant anymore
+                                "thickness_loco": 2},
+            filter_args={"min_cip_count": 1,                               
+                         "min_interface_count": 1}
+            ) 
+    assert len(graphs) > 10
+    grammar.fit(graphs,n_jobs = args.n_jobs)
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+            model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    scorer.n_jobs=1 # demons cant spawn children
+    selector = choice.SelectClassic(reg=0) 
+    transformer = transformutil.no_transform()
+    
+    sampler = sample.sampler(
+            transformer=transformer, 
+            grammar=grammar, 
+            scorer=scorer, 
+            selector=selector, 
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
+    return sampler.sample_burnin,graphs
+
 
 
 # 4. generate a learning curve
