@@ -9,7 +9,7 @@ python3 main2.py\
     --sge\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
-    --testsize 500\
+    --testsize 300\
     --burnin 8\
     --emit 5\
     --n_steps 30\

@@ -28,14 +28,13 @@ parser = argparse.ArgumentParser(description='generating graphs given few exampl
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
 parser.add_argument('--emit',type=int, help='emit every x graphs')
 parser.add_argument('--burnin',type=int, help='start emiting after this many steps')
+parser.add_argument('--grammar',type=str, help='priosim, ??')
 parser.add_argument('--sge', dest='sge', action='store_true')
 parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
-parser.add_argument('--max_graph_growth',type=int,default= 999, help='sampling filters cips by size')
 parser.add_argument('--n_steps',type=int,default=15, help='how many times we propose new graphs during sampling')
-parser.add_argument('--size_score_penalty',type=float,default=0.0, help='percentage of points reduced for each node that a graph is too large')
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
 parser.add_argument('--repeatseeds',type=int,default=[1,2,3],nargs='+', help='list of seeds for repeats.. more seeds means more repeats')
 args = parser.parse_args()
@@ -85,7 +84,7 @@ def get_all_graphs(randseed = 123):
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
-def addgraphs(graphs):
+def priosim(graphs):
     #grammar = loco.LOCO(  
     grammar = lsgg.lsgg(
             decomposition_args={"radius_list": [0,1,2], 
@@ -93,10 +92,8 @@ def addgraphs(graphs):
                                 "loco_minsimilarity": .3, 
                                 "thickness_loco": 2},
             filter_args={"min_cip_count": 1,                               
-                         "min_interface_count": 1},
-            maxgrowth  = args.max_graph_growth
+                         "min_interface_count": 1}
             ) 
-
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
     scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
@@ -111,9 +108,6 @@ def addgraphs(graphs):
             scorer=scorer, 
             selector=selector, 
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
-    
-
-    
     return sampler.sample_burnin,graphs
 
 
@@ -137,33 +131,7 @@ def make_scorer(ptest,ntest):
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
     return lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
 
-def learncurve(randseed=123): 
-    # SET UP VALIDATION SET
-    ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
-    print("got graphs.. setting up")
-    scorer = make_scorer(ptest,ntest)
-
-    # send all the jobs
-    if args.sge:
-        print("sge setup")
-        executer = sge()
-        for p,n in zip(ptrains,ntrains):
-            executer.add_job(*addgraphs(p))
-            executer.add_job(*addgraphs(n))
-        # execute all the jobs
-        print("sge execuging")
-        res = executer.execute()
-    else:
-        print("using local cores")
-        res = []
-        for p,n in zip(ptrains,ntrains):
-            res.append(ba.mpmap_prog(*addgraphs(p),
-                poolsize = args.n_jobs, chunksize=1))
-            res.append(ba.mpmap_prog(*addgraphs(n),
-                poolsize = args.n_jobs, chunksize=1))
-  
-    res = res [::-1] # pop will pop from the end...  
-
+def evaluate(scorer,ptrains,ntrains,res):
     # print curve
     myscore   = []
     baseline = []
@@ -179,8 +147,62 @@ def learncurve(randseed=123):
         genscore.append(scorer(gp,gn))
     return myscore,baseline,genscore
 
+def learncurve_mp(randseed=123,addgraphs=None): 
+    # SET UP VALIDATION SET
+    ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
+    print("got graphs.. setting up")
+    scorer = make_scorer(ptest,ntest)
+
+
+    print("using local cores")
+    res = []
+    for p,n in zip(ptrains,ntrains):
+        res.append(ba.mpmap_prog(*addgraphs(p),
+            poolsize = args.n_jobs, chunksize=1))
+        res.append(ba.mpmap_prog(*addgraphs(n),
+            poolsize = args.n_jobs, chunksize=1))
+  
+    res = res [::-1] # pop will pop from the end...  
+    return evaluate(scorer,ptrains,ntrains,res)
+
+
+def learncurve(randseed=123,executer=None,addgraphs = None): 
+    # SET UP VALIDATION SET
+    ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
+    print("got graphs.. setting up")
+    scorer = make_scorer(ptest,ntest)
+
+    # send all the jobs
+    for p,n in zip(ptrains,ntrains):
+        executer.add_job(*addgraphs(p))
+        executer.add_job(*addgraphs(n))
+
+    return scorer,ptrains,ntrains
+ 
+
+
+class peacemeal():
+    def __init__(self,stuff,split):
+        self.stuff = stuff
+        self.cnksize = int(len(stuff)/ split)
+    def get(self):
+        ret = self.stuff[:self.cnksize]
+        self.stuff = self.stuff[self.cnksize:]
+        return ret
+
+
 if __name__ == "__main__":
-    a,b,c = list(zip(*[learncurve(x) for x in args.repeatseeds]))
+    addgraphs =  eval(args.grammar)
+
+    if not args.sge:
+        a,b,c = list(zip(*[learncurve_mp(x,addgraphs) for x in args.repeatseeds]))
+    else:
+        executer = sge()
+        z= [learncurve(x,executer,addgraphs) for x in args.repeatseeds]
+        res = executer.execute() 
+        peacemeal=peacemeal(res,len(args.repeatseeds))
+        a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
+
     print('combined',      [ np.mean(x) for x in list(zip(*a))  ] )
     print('originals only',[ np.mean(x) for x in list(zip(*b))  ] )
     print('generated only',[ np.mean(x) for x in list(zip(*c))  ] )
