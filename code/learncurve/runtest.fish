@@ -10,9 +10,10 @@ python3 main2.py\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
     --testsize 300\
+    --grammar priosim\
     --burnin 8\
     --emit 5\
-    --n_steps 30\
+    --n_steps 15\
     --trainsize 50 50\
     --repeatseeds 1 
 
