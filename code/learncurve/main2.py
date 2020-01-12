@@ -41,8 +41,8 @@ parser.add_argument('--n_steps',type=int,default=15, help='how many times we pro
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
 parser.add_argument('--repeatseeds',type=int,default=[1,2,3],nargs='+', help='list of seeds for repeats.. more seeds means more repeats')
 parser.add_argument('--radii',type=int,default =[0,1,2],nargs='+', help='radiuslist')
-parser.add_argument('--thickness',type=int,default = 1, help='thickness')
-parser.add_argument('--min_cip',type=int,default = 2, help='cip min count')
+parser.add_argument('--thickness',type=int,default = 1, help='thickness, 1 is best')
+parser.add_argument('--min_cip',type=int,default = 1, help='cip min count')
 args = parser.parse_args()
 
 
@@ -116,11 +116,10 @@ def classic(graphs):
 
 def priosim(graphs):
     grammar = loco.LOCO(  
-            decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1],  
-                                "loco_minsimilarity": .3,  # this is not relevant anymore
+            decomposition_args={"radius_list":args.radii, 
+                                "thickness_list": [args.thickness],  
                                 "thickness_loco": 2},
-            filter_args={"min_cip_count": 1,                               
+            filter_args={"min_cip_count": args.min_cip,                               
                          "min_interface_count": 1}
             ) 
     assert len(graphs) > 10
@@ -233,7 +232,6 @@ def evaluate(scorer,ptrains,ntrains,res):
 def learncurve_mp(randseed=123,addgraphs=None): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
-    print("got graphs.. setting up")
     scorer = make_scorer(ptest,ntest)
 
 

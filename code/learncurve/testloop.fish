@@ -16,9 +16,12 @@ function gogo
 		--thickness $argv[2]\
 		--min_cip $argv[3]\
 		--trainsize 300\
-		--repeatseeds 123
+		--repeatseeds 1232 34 4321
 end 
 
+
+
+# 2-1-2 is good
 set maxrad 1 2 3 
 set thickness 1 2
 set minc 1 2 

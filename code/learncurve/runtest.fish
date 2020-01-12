@@ -19,15 +19,15 @@ python3 main2.py\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
     --testsize 300\
-    --loglevel  20\
-    --grammar coarseloco\
+    --loglevel  25\
+    --grammar priosim\
     --burnin 8\
     --emit 5\
     --n_steps 9\
-    --radii 0 1 2 3\
+    --radii 0 1 2\
     --thickness 1\
     --min_cip 1\
-    --trainsize 100\
+    --trainsize 200\
     --repeatseeds 123
 
 if test $sge = "T"

@@ -1,0 +1,260 @@
+# grid search for basic  grammar params...
+X Y Z 
+
+X =>  radius 0..X
+Y => thickness ... 1 seems good
+Z => min cip count
+
+###############      PARAMS 1 1 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940377', b'6940378', b'6940379', b'6940380', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6429999999999999]
+originals only [0.6673333333333334]
+generated only [0.38633333333333336]
+combined [0.01699019324983289]
+originals only [0.018926759422104485]
+generated only [0.00736357401145818]
+###############      PARAMS 1 1 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940383', b'6940384', b'6940385', b'6940386', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6413333333333334]
+originals only [0.6673333333333334]
+generated only [0.36566666666666664]
+combined [0.01826350337573698]
+originals only [0.018926759422104485]
+generated only [0.021761331658599305]
+###############      PARAMS 1 2 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940390', b'6940391', b'6940392', b'6940393', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6186666666666666]
+originals only [0.6673333333333334]
+generated only [0.3586666666666667]
+combined [0.025486379804820394]
+originals only [0.018926759422104485]
+generated only [0.004189935029992182]
+###############      PARAMS 1 2 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940396', b'6940397', b'6940398', b'6940399', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6166666666666666]
+originals only [0.6673333333333334]
+generated only [0.36000000000000004]
+combined [0.022216110270602198]
+originals only [0.018926759422104485]
+generated only [0.013928388277184107]
+###############      PARAMS 2 1 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940402', b'6940403', b'6940404', b'6940405', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6433333333333333]
+originals only [0.6673333333333334]
+generated only [0.371]
+combined [0.024796953217863075]
+originals only [0.018926759422104485]
+generated only [0.017682382946499806]
+###############      PARAMS 2 1 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940412', b'6940413', b'6940414', b'6940415', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6386666666666666]
+originals only [0.6673333333333334]
+generated only [0.359]
+combined [0.014383632673594292]
+originals only [0.018926759422104485]
+generated only [0.02070426687102604]
+###############      PARAMS 2 2 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940426', b'6940427', b'6940428', b'6940429', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.602]
+originals only [0.6673333333333334]
+generated only [0.3746666666666667]
+combined [0.012961481396815732]
+originals only [0.018926759422104485]
+generated only [0.008498365855987981]
+###############      PARAMS 2 2 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940435', b'6940436', b'6940437', b'6940438', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.5933333333333334]
+originals only [0.6673333333333334]
+generated only [0.38566666666666666]
+combined [0.026233989826601356]
+originals only [0.018926759422104485]
+generated only [0.008379870059984364]
+###############      PARAMS 3 1 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940462', b'6940463', b'6940464', b'6940465', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.6233333333333333]
+originals only [0.6673333333333334]
+generated only [0.3406666666666667]
+combined [0.023098821518760575]
+originals only [0.018926759422104485]
+generated only [0.008013876853447519]
+###############      PARAMS 3 1 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940488', b'6940489', b'6940490', b'6940491', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.634]
+originals only [0.6673333333333334]
+generated only [0.3513333333333333]
+combined [0.01728197519575431]
+originals only [0.018926759422104485]
+generated only [0.01906713286143345]
+###############      PARAMS 3 2 1
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940509', b'6940510', b'6940511', b'6940512', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.586]
+originals only [0.6673333333333334]
+generated only [0.3543333333333334]
+combined [0.026882460204874576]
+originals only [0.018926759422104485]
+generated only [0.02638602323621773]
+###############      PARAMS 3 2 2
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+lenpos: 1746
+lenneg: 1806
+got graphs.. setting up
+task ids [b'6940537', b'6940538', b'6940539', b'6940540', b'6
+]
+gpl: 300
+gpl: 300
+gpl: 300
+combined [0.606]
+originals only [0.6673333333333334]
+generated only [0.3526666666666667]
+combined [0.029063149634316447]
+originals only [0.018926759422104485]
+generated only [0.01347425528760515]
+cn001mautner~/s/G/c/learncurve$[77*]                         
