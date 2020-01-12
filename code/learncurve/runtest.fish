@@ -1,21 +1,36 @@
 
-#rm /home/mautner/scratch/logfiles/ld_e/*
-#rm /home/mautner/scratch/logfiles/ld_o/*
-#rm *.pickle 
-#rm res/*
+
+
+set sge T 
+
+if test $sge = "T"
+    set sgearg "--sge"
+    rm /home/mautner/scratch/logfiles/ld_e/*
+    rm /home/mautner/scratch/logfiles/ld_o/*
+    rm *.pickle 
+    rm res/*
+else
+    set sgearg "--no-sge"
+end
 
 python3 main2.py\
     --n_jobs 24\
-    --sge\
+    $sgearg\
     --neg AID/bursi_neg.smi\
     --pos AID/bursi_pos.smi\
     --testsize 300\
-    --grammar priosim\
+    --loglevel  20\
+    --grammar coarseloco\
     --burnin 8\
     --emit 5\
-    --n_steps 15\
-    --trainsize 50 50\
-    --repeatseeds 1 
+    --n_steps 9\
+    --radii 0 1 2 3\
+    --thickness 1\
+    --min_cip 1\
+    --trainsize 100\
+    --repeatseeds 123
 
-#cat /home/mautner/scratch/logfiles/ld_o/*
-#cat /home/mautner/scratch/logfiles/ld_e/*
+if test $sge = "T"
+    cat /home/mautner/scratch/logfiles/ld_o/*
+    cat /home/mautner/scratch/logfiles/ld_e/*
+end 
