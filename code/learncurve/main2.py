@@ -12,6 +12,7 @@ import graphlearn.sample as sample
 import basics as ba # should use this to sample later 
 from functools import partial
 import sklearn.svm as svm 
+from sklearn.metrics import roc_auc_score
 import scipy as sp
 import argparse
 import random
@@ -44,6 +45,13 @@ parser.add_argument('--radii',type=int,default =[0,1,2],nargs='+', help='radiusl
 parser.add_argument('--thickness',type=int,default = 1, help='thickness, 1 is best')
 parser.add_argument('--min_cip',type=int,default = 1, help='cip min count')
 parser.add_argument('--reg',type=float,default = .25 , help='regulates aggressiveness of acepting worse graphs')
+
+
+# args for other uses
+parser.add_argument('--model',type=str,default = 'aae' , help='dummy parameter because this file got too powerful')
+parser.add_argument('--train_load',type=str,default='', help=' dataset') 
+parser.add_argument('--gen_save',type=str, help='genereated smiles goes here') 
+
 args = parser.parse_args()
 
 
@@ -204,7 +212,8 @@ def getscore(gp, gn,xt,yt):
     gnn = vectorize(gn)
     svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((gpp,gnn)),
             [1]*gpp.shape[0]+[0]*gnn.shape[0]  ) 
-    return  svc.score(xt,yt )
+    # svc.score(xt,yt) # previously this
+    return  roc_auc_score(yt,svc.decision_function(xt))
 
 
 def make_scorer(ptest,ntest):
@@ -227,7 +236,6 @@ def evaluate(scorer,ptrains,ntrains,res):
         myscore.append(scorer(gp+p, gn+n))
         baseline.append(scorer(p,n))
         genscore.append(scorer(gp,gn))
-        print('gpl:',len(gp))
     return myscore,baseline,genscore
 
 def learncurve_mp(randseed=123,addgraphs=None): 
@@ -271,19 +279,7 @@ class peacemeal():
         self.stuff = self.stuff[self.cnksize:]
         return ret
 
-
-if __name__ == "__main__":
-    addgraphs =  eval(args.grammar)
-
-    if not args.sge:
-        a,b,c = list(zip(*[learncurve_mp(x,addgraphs) for x in args.repeatseeds]))
-    else:
-        executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
-        z= [learncurve(x,executer,addgraphs) for x in args.repeatseeds]
-        res = executer.execute() 
-        peacemeal=peacemeal(res,len(args.repeatseeds))
-        a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
-
+def format_abc(a,b,c, sav='res.pickle'):
     cm =[ np.mean(x) for x in list(zip(*a))  ] 
     om =[ np.mean(x) for x in list(zip(*b))  ] 
     gm=[ np.mean(x) for x in list(zip(*c))  ] 
@@ -297,5 +293,30 @@ if __name__ == "__main__":
     print('combined',      cs )
     print('originals only',os )
     print('generated only',gs )
-    ba.dumpfile([args.trainsizes,(cm,om,gm),(cs,os,gs)],"res.pickle")
 
+    ts = np.array(args.trainsizes)
+    gen = np.array( [ e*((args.n_steps-args.burnin)//args.emit +1)   for e in args.trainsizes] )
+    ba.dumpfile([ (ts+gen,ts,gen)  ,(cm,om,gm),(cs,os,gs),(a,b,c)],sav)
+
+
+if __name__ == "__main__":
+    addgraphs =  eval(args.grammar)
+
+    if len(args.train_load)>1: 
+        z=open(args.train_load,'r').read().split()[1:]
+        z=[zz[:-6] for zz in z ]
+        graphs = list(rdk.smiles_strings_to_nx(z)) 
+        res = sgexec(*addgraphs(graphs))
+        rdk.nx_to_smi(res,args.gen_save)
+        open(args.gen_save+".args","w").write(str(args))
+
+    else:
+        if not args.sge:
+            a,b,c = list(zip(*[learncurve_mp(x,addgraphs) for x in args.repeatseeds]))
+        else:
+            executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
+            z= [learncurve(x,executer,addgraphs) for x in args.repeatseeds]
+            res = executer.execute() 
+            peacemeal=peacemeal(res,len(args.repeatseeds))
+            a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
+        format_abc(a,b,c,sav) 

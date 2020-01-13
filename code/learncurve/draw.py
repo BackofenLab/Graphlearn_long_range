@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit
+import basics as ba
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -13,10 +14,12 @@ def logistic(x, p1,p2):
 def logreversed(y,a,b):
     return np.exp((y-b)/a)
 
-def learncurve(xvals=[100,200,300],
+def learncurve(xvalss=[(100,200,300)],
         meanss=[(10,20,30),(5,15,25)],
         stdss=[ (20,20,20),(10,10,10)  ],
-        labels = ['original + generated','original','generated'],colors='rgb'):
+        rawdata=[(),(),()],
+        labels = ['original + generated','original','generated'],
+        colors='rgb'):
 
     func = logistic
     funcrev = logreversed
@@ -25,21 +28,28 @@ def learncurve(xvals=[100,200,300],
     ###################
     # get params
     params = {}
-    for means, stds,label in zip(meanss,stdss,labels): 
+    for means, stds,label,xvals in zip(meanss,stdss,labels,xvalss): 
         main,_ = curve_fit(func, xvals,means)
         upper,_ = curve_fit(func, xvals,[m+s for m,s in zip(means,stds)])
         lower,_ = curve_fit(func, xvals,[m-s for m,s in zip(means,stds)])
         params[label] = [main,upper,lower]
     ##################3
     # make curve 
-    for means, stds,label,color in zip(meanss,stdss,labels,colors): 
+    for means, stds,label,color,raw,xvals in zip(meanss,stdss,labels,colors,rawdata,xvalss): 
+        raw2 = list(zip(*raw))
         x = range(50,max(xvals))
         params_main, params_upper, params_lower = params[label]
         plt.plot( x, [func(xx,*params_main) for xx in x ], label = label , color=color)
         plt.plot(xvals, means, 'o', color=color)
+        plt.boxplot()
+        probs= {"color":color}
+        plt.boxplot(raw2,positions=xvals,boxprops=props,
+                widths=10,whiskerprops=props,capprops=props)
         plt.fill_between(x, [func(xx,*params_upper) for xx in x ],
                             [func(xx,*params_lower) for xx in x ], alpha=0.1, color=color)
 
+    plt.ylabel("ROCAUC")
+    plt.xlabel("Training instances")
     plt.legend()
     plt.show()
     
@@ -68,6 +78,10 @@ b=[ [0.014055445761538672, 0.010208928554075711, 0.01574801574802361,
 [0.012247448713915879, 0.013021349989749726, 0.015895492023421807,
 0.025315783394730028, 0.015584892970081268, 0.032714251057027466]]
 
+x = [200,400,600,800,1000,1200]
 
 
-learncurve([200,400,600,800,1000,1200],a,b )
+#x,a,b,c = ba.loadfile("char_rnn.pickle")  
+#x = [200,400,600,800,1200]
+#print (x,a,b)
+learncurve(x,a,b,c )
