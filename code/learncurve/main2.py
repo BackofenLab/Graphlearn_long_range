@@ -203,39 +203,61 @@ def coarseloco(graphs):
 
 
 # 4. generate a learning curve
+class peacemeal():
+    def __init__(self,stuff,split):
+        self.stuff = stuff
+        self.cnksize = int(len(stuff)/ split)
+    def getx(self,x):
+        ret = self.stuff[:x]
+        self.stuff = self.stuff[x:]
+        return ret
+    def get(self):
+        ret = self.stuff[:self.cnksize]
+        self.stuff = self.stuff[self.cnksize:]
+        return ret
+
 def vectorize(graphs):
     return sp.sparse.vstack(ba.mpmap(eden.vectorize,
         [[g] for g in graphs],poolsize=args.n_jobs,chunksize=20))
 
-
-def getscore(gp, gn,xt,yt): 
-    vectors= vectorize(gp+gn)
-    svc = svm.SVC(gamma='auto').fit(vectors,
-            [1]*len(gp)+[0]*len(gn)) 
+def getscore(g_tup,xt=None,yt=None): 
+    v,y=g_tup
+    svc = svm.SVC(gamma='auto').fit(v,y) 
     # svc.score(xt,yt) # previously this
     return  roc_auc_score(yt,svc.decision_function(xt))
-
 
 def make_scorer(ptest,ntest):
     X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
     y_test= np.array([1]*len(ptest)+[0]*len(ntest))
-    return lambda pgraphs,ngraphs: getscore(pgraphs,ngraphs,X_test,y_test)
+    return partial( getscore , xt=X_test, yt= y_test )
 
 def evaluate(scorer,ptrains,ntrains,res):
     # print curve
     myscore   = []
     baseline = []
     genscore = []
+    tasks=[]
     for p,n in zip(ptrains,ntrains):
         gp = res.pop()
         gn = res.pop()
         if isinstance(gp[0],list):
             gp = [g for gl in gp for g in gl]
             gn = [g for gl in gn for g in gl]
+        gp = vectorize(gp)
+        gn=vectorize(gn)
+        p=vectorize(p)
+        n=vectorize(n)
+        f= lambda a,b : (sp.sparse.vstack((a,b)), [1]*a.shape[0]+[0]*b.shape[0])
+        tasks += [f(sp.sparse.vstack((gp,p)),sp.sparse.vstack((gn,n))),f(p,n),f(gp,gn)]
+    res=ba.mpmap_prog(scorer,tasks,poolsize=args.n_jobs)
 
-        myscore.append(scorer(gp+p, gn+n))
-        baseline.append(scorer(p,n))
-        genscore.append(scorer(gp,gn))
+    p= peacemeal(res,123)
+    while p.stuff:
+        a,b,c = p.getx(3)
+        myscore.append(a)
+        baseline.append(b)
+        genscore.append(c)
+    
     return myscore,baseline,genscore
 
 def learncurve_mp(randseed=123,addgraphs=None): 
@@ -270,14 +292,6 @@ def learncurve(randseed=123,executer=None,addgraphs = None):
  
 
 
-class peacemeal():
-    def __init__(self,stuff,split):
-        self.stuff = stuff
-        self.cnksize = int(len(stuff)/ split)
-    def get(self):
-        ret = self.stuff[:self.cnksize]
-        self.stuff = self.stuff[self.cnksize:]
-        return ret
 
 def format_abc(a,b,c, sav='res.pickle'):
     cm =[ np.mean(x) for x in list(zip(*a))  ] 
@@ -317,6 +331,6 @@ if __name__ == "__main__":
             executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
             z= [learncurve(x,executer,addgraphs) for x in args.repeatseeds]
             res = executer.execute() 
-            peacemeal=peacemeal(res,len(args.repeatseeds))
-            a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
+            meal=peacemeal(res,len(args.repeatseeds))
+            a,b,c = list(zip(*[evaluate(s,pt,nt,meal.get()) for s,pt,nt in z ]))
         format_abc(a,b,c,args.save) 
