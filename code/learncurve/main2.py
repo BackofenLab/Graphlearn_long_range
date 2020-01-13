@@ -43,6 +43,7 @@ parser.add_argument('--repeatseeds',type=int,default=[1,2,3],nargs='+', help='li
 parser.add_argument('--radii',type=int,default =[0,1,2],nargs='+', help='radiuslist')
 parser.add_argument('--thickness',type=int,default = 1, help='thickness, 1 is best')
 parser.add_argument('--min_cip',type=int,default = 1, help='cip min count')
+parser.add_argument('--reg',type=float,default = .25 , help='regulates aggressiveness of acepting worse graphs')
 args = parser.parse_args()
 
 
@@ -60,7 +61,7 @@ def getnx(fname,randseed=123):
         with gzip.open(fname,'rb') as fi:
             smiles = fi.read()
         graphs = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
-        ba.dumpfile(atomz,cachename)
+        ba.dumpfile(graphs,cachename)
 
     '''shuffle and return'''
     random.seed(randseed)
@@ -99,11 +100,11 @@ def classic(graphs):
             ) 
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
-    #scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
-    scorer = score.OneClassEstimator(n_jobs=args.n_jobs,
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+    #scorer = score.OneClassEstimator(n_jobs=args.n_jobs,
             model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectClassic(reg=0) 
+    selector = choice.SelectClassic(reg=args.reg) 
     transformer = transformutil.no_transform()
     
     sampler = sample.sampler(
@@ -127,7 +128,7 @@ def priosim(graphs):
     scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
             model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectClassic(reg=0) 
+    selector = choice.SelectClassic(reg=args.reg) 
     transformer = transformutil.no_transform()
     
     sampler = sample.sampler(
@@ -250,7 +251,6 @@ def learncurve_mp(randseed=123,addgraphs=None):
 def learncurve(randseed=123,executer=None,addgraphs = None): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
-    print("got graphs.. setting up")
     scorer = make_scorer(ptest,ntest)
 
     # send all the jobs
@@ -284,9 +284,18 @@ if __name__ == "__main__":
         peacemeal=peacemeal(res,len(args.repeatseeds))
         a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
 
-    print('combined',      [ np.mean(x) for x in list(zip(*a))  ] )
-    print('originals only',[ np.mean(x) for x in list(zip(*b))  ] )
-    print('generated only',[ np.mean(x) for x in list(zip(*c))  ] )
-    print('combined',      [ np.std(x) for x in list(zip(*a))  ] )
-    print('originals only',[ np.std(x) for x in list(zip(*b))  ] )
-    print('generated only',[ np.std(x) for x in list(zip(*c))  ] )
+    cm =[ np.mean(x) for x in list(zip(*a))  ] 
+    om =[ np.mean(x) for x in list(zip(*b))  ] 
+    gm=[ np.mean(x) for x in list(zip(*c))  ] 
+    cs=[ np.std(x) for x in list(zip(*a))  ] 
+    os=[ np.std(x) for x in list(zip(*b))  ] 
+    gs=[ np.std(x) for x in list(zip(*c))  ] 
+
+    print('combined',      cm )
+    print('originals only',om )
+    print('generated only',gm )
+    print('combined',      cs )
+    print('originals only',os )
+    print('generated only',gs )
+    ba.dumpfile([args.trainsizes,(cm,om,gm),(cs,os,gs)],"res.pickle")
+
