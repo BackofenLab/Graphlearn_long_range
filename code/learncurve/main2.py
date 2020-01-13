@@ -45,6 +45,7 @@ parser.add_argument('--radii',type=int,default =[0,1,2],nargs='+', help='radiusl
 parser.add_argument('--thickness',type=int,default = 1, help='thickness, 1 is best')
 parser.add_argument('--min_cip',type=int,default = 1, help='cip min count')
 parser.add_argument('--reg',type=float,default = .25 , help='regulates aggressiveness of acepting worse graphs')
+parser.add_argument('--save',type=str,default = 'sav.sav' , help='save file')
 
 
 # args for other uses
@@ -204,14 +205,13 @@ def coarseloco(graphs):
 # 4. generate a learning curve
 def vectorize(graphs):
     return sp.sparse.vstack(ba.mpmap(eden.vectorize,
-        [[g] for g in graphs],poolsize=args.n_jobs))
+        [[g] for g in graphs],poolsize=args.n_jobs,chunksize=20))
 
 
 def getscore(gp, gn,xt,yt): 
-    gpp = vectorize(gp)
-    gnn = vectorize(gn)
-    svc = svm.SVC(gamma='auto').fit( sp.sparse.vstack((gpp,gnn)),
-            [1]*gpp.shape[0]+[0]*gnn.shape[0]  ) 
+    vectors= vectorize(gp+gn)
+    svc = svm.SVC(gamma='auto').fit(vectors,
+            [1]*len(gp)+[0]*len(gn)) 
     # svc.score(xt,yt) # previously this
     return  roc_auc_score(yt,svc.decision_function(xt))
 
@@ -319,4 +319,4 @@ if __name__ == "__main__":
             res = executer.execute() 
             peacemeal=peacemeal(res,len(args.repeatseeds))
             a,b,c = list(zip(*[evaluate(s,pt,nt,peacemeal.get()) for s,pt,nt in z ]))
-        format_abc(a,b,c,sav) 
+        format_abc(a,b,c,args.save) 

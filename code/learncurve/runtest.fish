@@ -5,7 +5,7 @@
 
 set sge T 
 
-if test $sge = "T"
+if test $sge = "F"
     set sgearg "--sge"
     rm /home/mautner/scratch/logfiles/ld_e/*
     rm /home/mautner/scratch/logfiles/ld_o/*
@@ -15,19 +15,19 @@ else
     set sgearg "--no-sge"
 end
 
-python3 main2.py\
+python3 -m cProfile -o prof.profile main2.py\
     --n_jobs 24\
     $sgearg\
-    --neg AID/119_active.txt.gz\
-    --pos AID/119_inactive.txt.gz\
+    --neg AID/bursi_pos.smi\
+    --pos AID/bursi_neg.smi\
     --testsize 500\
-    --loglevel  25\
+    --loglevel  40\
     --grammar classic\
     --burnin 10\
     --emit 5\
     --n_steps 21\
-    --trainsize 200 400 600 800 1000 1200 1400\
-    --repeatseeds 123  12 1244
+    --trainsize 200\
+    --repeatseeds 123
 
 if test $sge = "T"
     #cat /home/mautner/scratch/logfiles/ld_o/*
