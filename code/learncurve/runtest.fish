@@ -1,4 +1,6 @@
 
+#--neg AID/bursi_neg.smi\
+#--pos AID/bursi_pos.smi\
 
 
 set sge T 
@@ -16,21 +18,18 @@ end
 python3 main2.py\
     --n_jobs 24\
     $sgearg\
-    --neg AID/bursi_neg.smi\
-    --pos AID/bursi_pos.smi\
-    --testsize 300\
+    --neg AID/119_active.txt.gz\
+    --pos AID/119_inactive.txt.gz\
+    --testsize 500\
     --loglevel  25\
-    --grammar priosim\
-    --burnin 8\
+    --grammar classic\
+    --burnin 10\
     --emit 5\
-    --n_steps 9\
-    --radii 0 1 2\
-    --thickness 1\
-    --min_cip 1\
-    --trainsize 200\
-    --repeatseeds 123
+    --n_steps 21\
+    --trainsize 200 400 600 800 1000 1200 1400\
+    --repeatseeds 123  12 1244
 
 if test $sge = "T"
-    cat /home/mautner/scratch/logfiles/ld_o/*
-    cat /home/mautner/scratch/logfiles/ld_e/*
+    #cat /home/mautner/scratch/logfiles/ld_o/*
+    #cat /home/mautner/scratch/logfiles/ld_e/*
 end 
