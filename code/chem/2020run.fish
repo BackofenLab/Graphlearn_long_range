@@ -1,9 +1,8 @@
 set models aae char_rnn vae organ
-set datas learncurve/{p,n}{100,200,300,400}_{0,1,2}
-
+set datas mosestrain/{p,n}{200,400,600,800,1000,1200}_{0,1,2}
+# see also moseslearncurve.py in learncurve for the evaluation
 for model in $models
     for data in $datas
-
         set -e trainadd 
         set -e sampleadd 
         if test $model = 'organ'; set trainadd '--pg_iters' 10; end  # 10 is still ok just 2 for my test, neee

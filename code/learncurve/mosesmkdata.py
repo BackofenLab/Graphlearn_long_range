@@ -1,7 +1,4 @@
-
-
 # we just make a folder with all the data...  args(mostly file-paths) will be taken care of by main2.py
-
 
 # USAGE:
 #python3 mosesmkdata.py --neg AID/bursi_neg.smi --pos AID/bursi_pos.smi --testsize 500 --trainsize 100 200 300 400
@@ -11,7 +8,7 @@ import os
 import rdkitutils as rdk
 
 
-foldername = 'newtraindata2'
+foldername = 'mosestrain'
 os.mkdir(foldername)
 
 def mk1set(ind ,randseed):
