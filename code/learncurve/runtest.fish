@@ -22,9 +22,9 @@ python3 main2.py\
     --burnin 20\
     --emit 5\
     --n_steps 21\
-    --trainsize 100 200 300 400\
+    --trainsize 100\
     --save (date  "+%j_%H_%M").sav\
-    --repeatseeds 1 2 3
+    --repeatseeds 1 
 
 if test $sge = "T"
     #cat /home/mautner/scratch/logfiles/ld_o/*
