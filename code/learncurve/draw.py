@@ -2,17 +2,18 @@ from scipy.optimize import curve_fit
 import basics as ba
 import numpy as np
 import matplotlib.pyplot as plt
+import math 
 
+def sigmoid(x, L ,x0, k,b):
+    return  (L / (1 + np.exp(-k*(x-x0)))+b)
 
+def fitsigmoid(_,x,y):
+        p0 = [max(y), np.median(x),.5,min(y)] 
+        return  curve_fit(sigmoid, x,y,p0)
 
-def genlin(x, a, b, c, d, g):
-    return ( ( (a-d) / ( (1+( (x/c)** b )) **g) ) + d )
+def lin(x,a,b):
+    return x*a+b
 
-def logistic(x, p1,p2):
-      return p1*np.log(x)+p2
-
-def logreversed(y,a,b):
-    return np.exp((y-b)/a)
 
 def learncurve(xvalss=[(100,200,300)],
         meanss=[(10,20,30),(5,15,25)],
@@ -21,30 +22,32 @@ def learncurve(xvalss=[(100,200,300)],
         labels = ['original + generated','original','generated'],
         colors='rgb'):
 
-    func = logistic
-    funcrev = logreversed
-
+    func = sigmoid
+    fit= fitsigmoid
+    maxvals = max([x for xx in xvalss for x in xx])
 
     ###################
     # get params
     params = {}
-    for means, stds,label,xvals in zip(meanss,stdss,labels,xvalss): 
-        main,_ = curve_fit(func, xvals,means)
-        upper,_ = curve_fit(func, xvals,[m+s for m,s in zip(means,stds)])
-        lower,_ = curve_fit(func, xvals,[m-s for m,s in zip(means,stds)])
+    for means, stds,label,xvals,raw in zip(meanss,stdss,labels,xvalss,rawdata): 
+
+        main,_ = fit(func, xvals,means)
+        upper,_ = fit(func, xvals,[m+s for m,s in zip(means,stds)])
+        lower,_ = fit(func, xvals,[m-s for m,s in zip(means,stds)])
         params[label] = [main,upper,lower]
     ##################3
     # make curve 
     for means, stds,label,color,raw,xvals in zip(meanss,stdss,labels,colors,rawdata,xvalss): 
         raw2 = list(zip(*raw))
-        x = range(50,max(xvals))
-        params_main, params_upper, params_lower = params[label]
+        x = range(50,maxvals)
+
+        params_main, params_upper, params_lower = params[label] ###  !!
+
         plt.plot( x, [func(xx,*params_main) for xx in x ], label = label , color=color)
-        plt.plot(xvals, means, 'o', color=color)
-        plt.boxplot()
-        probs= {"color":color}
+        #plt.plot(xvals, means, 'o', color=color)
+        props= {"color":color}
         plt.boxplot(raw2,positions=xvals,boxprops=props,
-                widths=10,whiskerprops=props,capprops=props)
+                widths=50,whiskerprops=props,capprops=props)
         plt.fill_between(x, [func(xx,*params_upper) for xx in x ],
                             [func(xx,*params_lower) for xx in x ], alpha=0.1, color=color)
 
@@ -58,7 +61,7 @@ def learncurve(xvalss=[(100,200,300)],
     # value increase: 
     print (params)
     po = params[labels[1]][0]  # orig
-    print ( [funcrev(x ,*po) for x in meanss[0]] )
+    #print ( [funcrev(x ,*po) for x in meanss[0]] )
 
 
 
@@ -84,4 +87,5 @@ x = [200,400,600,800,1000,1200]
 #x,a,b,c = ba.loadfile("char_rnn.pickle")  
 #x = [200,400,600,800,1200]
 #print (x,a,b)
+x,a,b,c = ba.loadfile("sav.sav")
 learncurve(x,a,b,c )
