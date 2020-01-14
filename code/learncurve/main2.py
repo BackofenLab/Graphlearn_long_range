@@ -36,7 +36,7 @@ parser.add_argument('--sge', dest='sge', action='store_true')
 parser.add_argument('--no-sge', dest='sge', action='store_false')
 parser.add_argument('--neg',type=str, help='negative dataset')
 parser.add_argument('--pos',type=str, help='positive dataset')
-parser.add_argument('--loglevel',type=int,default =0, help='loglevel')
+parser.add_argument('--loglevel',type=int,default = 40, help='loglevel')
 parser.add_argument('--testsize',type=int, help='number of graphs for testing')
 parser.add_argument('--n_steps',type=int,default=15, help='how many times we propose new graphs during sampling')
 parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes')
@@ -52,6 +52,7 @@ parser.add_argument('--save',type=str,default = 'sav.sav' , help='save file')
 parser.add_argument('--model',type=str,default = 'aae' , help='dummy parameter because this file got too powerful')
 parser.add_argument('--train_load',type=str,default='', help=' dataset') 
 parser.add_argument('--gen_save',type=str, help='genereated smiles goes here') 
+parser.add_argument('--n_samples',type=int, help='effectively limit nr of startgraphs ') 
 
 args = parser.parse_args()
 
@@ -305,9 +306,10 @@ if __name__ == "__main__":
     if len(args.train_load)>1: 
         z=open(args.train_load,'r').read().split()[1:]
         z=[zz[:-6] for zz in z ]
-        graphs = list(rdk.smiles_strings_to_nx(z)) 
-        res = sgexec(*addgraphs(graphs))
-        rdk.nx_to_smi(res,args.gen_save)
+        graphs = list(rut.smiles_strings_to_nx(z)) 
+        res = ba.mpmap_prog(*addgraphs(graphs[:args.n_samples]) ,poolsize=args.n_jobs)
+        res = [ x for xx in res for x in xx]
+        rut.nx_to_smi(res,args.gen_save)
         open(args.gen_save+".args","w").write(str(args))
 
     else:
