@@ -173,6 +173,7 @@ def coarse(graphs):
             selector=selector, 
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
+
 def coarseloco(graphs):
     # UNTESTED
     grammar = lsgg_LL.lsgg_locolayer(  
@@ -222,7 +223,8 @@ def vectorize(graphs):
 
 def getscore(g_tup,xt=None,yt=None): 
     v,y=g_tup
-    svc = svm.SVC(gamma='auto').fit(v,y) 
+    #svc = svm.SVC(gamma='auto').fit(v,y) 
+    svc = svm.SVC(kernel='linear').fit(v,y) 
     # svc.score(xt,yt) # previously this
     return  roc_auc_score(yt,svc.decision_function(xt))
 
@@ -249,7 +251,7 @@ def evaluate(scorer,ptrains,ntrains,res):
         n=vectorize(n)
         f= lambda a,b : (sp.sparse.vstack((a,b)), [1]*a.shape[0]+[0]*b.shape[0])
         tasks += [f(sp.sparse.vstack((gp,p)),sp.sparse.vstack((gn,n))),f(p,n),f(gp,gn)]
-    res=ba.mpmap_prog(scorer,tasks,poolsize=args.n_jobs)
+    res=ba.mpmap_prog(scorer,tasks)
 
     p= peacemeal(res,123)
     while p.stuff:
