@@ -19,11 +19,12 @@ python3 main2.py\
     --testsize 500\
     --loglevel  40\
     --grammar classic\
-    --burnin 10\
+    --burnin 20\
     --emit 5\
     --n_steps 21\
     --trainsize 100\
-    --repeatseeds 1 2 3 
+    --save (date  "+%j_%H_%M").sav\
+    --repeatseeds 1 
 
 if test $sge = "T"
     #cat /home/mautner/scratch/logfiles/ld_o/*
