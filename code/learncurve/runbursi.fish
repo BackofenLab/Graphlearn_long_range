@@ -16,7 +16,7 @@ for grammar in $grammars
                      --burnin 20\
                      --emit 5\
                      --n_steps 21\
-                     --repeatseeds 1333\
+                     --repeatseeds 1333 1213 1234\
                      --save $grammar.sav\
-                     --trainsize 80
+                     --trainsize 200 400 600 800 1000 1200
 end
