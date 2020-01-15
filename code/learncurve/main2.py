@@ -129,7 +129,7 @@ def priosim(graphs):
     grammar = loco.LOCO(  
             decomposition_args={"radius_list":args.radii, 
                                 "thickness_list": [args.thickness],  
-                                "thickness_loco": 2},
+                                "thickness_loco": 2+args.thickness},
             filter_args={"min_cip_count": args.min_cip,                               
                          "min_interface_count": 1}
             ) 
@@ -181,7 +181,7 @@ def coarseloco(graphs):
             decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [1],  
                                 "base_thickness_list": [2],
-                                "thickness_loco": 2
+                                "thickness_loco": 2+args.thickness
                                 },
             filter_args={"min_cip_count": 1,                               
                          "min_interface_count": 1}

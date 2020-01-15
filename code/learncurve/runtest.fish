@@ -17,8 +17,8 @@ python3 main2.py\
     --neg AID/bursi_pos.smi\
     --pos AID/bursi_neg.smi\
     --testsize 500\
-    --loglevel  40\
-    --grammar classic\
+    --loglevel  99\
+    --grammar priosim\
     --burnin 20\
     --emit 5\
     --n_steps 21\
