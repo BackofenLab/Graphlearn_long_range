@@ -153,8 +153,8 @@ def coarse(graphs):
     # UNTESTED
     grammar = lsggl.lsgg_layered(  
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1],  
-                                "base_thickness_list": [2]
+                                "thickness_list": [2],  
+                                "base_thickness_list": [1]
                                 },
             filter_args={"min_cip_count": 1,                               
                          "min_interface_count": 1}
@@ -179,9 +179,9 @@ def coarseloco(graphs):
     # UNTESTED
     grammar = lsgg_LL.lsgg_locolayer(  
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [1],  
-                                "base_thickness_list": [2],
-                                "thickness_loco": 2+args.thickness
+                                "thickness_list": [2],  
+                                "base_thickness_list": [1],
+                                "thickness_loco": 2+1
                                 },
             filter_args={"min_cip_count": 1,                               
                          "min_interface_count": 1}
