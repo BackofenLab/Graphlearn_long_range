@@ -1,7 +1,7 @@
 
 set sge T 
 
-if test $sge = "T"
+if test $sge = "F"
     set sgearg "--sge"
     rm /home/mautner/scratch/logfiles/ld_e/*
     rm /home/mautner/scratch/logfiles/ld_o/*
@@ -12,13 +12,13 @@ else
 end
 
 python3 main2.py\
-    --n_jobs 24\
+    --n_jobs 8\
     $sgearg\
     --neg AID/bursi_pos.smi\
     --pos AID/bursi_neg.smi\
-    --testsize 500\
+    --testsize 300\
     --loglevel  99\
-    --grammar priosim\
+    --grammar classic\
     --burnin 20\
     --emit 5\
     --n_steps 21\

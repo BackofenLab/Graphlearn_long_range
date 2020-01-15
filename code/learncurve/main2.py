@@ -146,7 +146,7 @@ def priosim(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit, faster=True) 
     return sampler.sample_burnin,graphs
 
 def coarse(graphs):
@@ -199,7 +199,7 @@ def coarseloco(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
-            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
+            n_steps=args.n_steps, burnin = args.burnin, emit=args.emit, faster=True) 
     return sampler.sample_burnin,graphs
 
 
@@ -245,8 +245,8 @@ def evaluate(scorer,ptrains,ntrains,res):
         if isinstance(gp[0],list):
             gp = [g for gl in gp for g in gl]
             gn = [g for gl in gn for g in gl]
-        gp = vectorize(gp)
-        gn=vectorize(gn)
+        gp = vectorize([g for g in  gp if g is not None])
+        gn=vectorize([g for g in gn if g is  not None])
         p=vectorize(p)
         n=vectorize(n)
         f= lambda a,b : (sp.sparse.vstack((a,b)), [1]*a.shape[0]+[0]*b.shape[0])

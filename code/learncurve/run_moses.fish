@@ -1,6 +1,6 @@
 set data data5000
 set path $HOME/repos/moses
-set grammars classic coarse priosim coarseloco
+set grammars priosim #coarseloco classic coarse 
 
 switch $argv[1]
 
@@ -26,7 +26,7 @@ case runall
                          --grammar $grammar\
                          --train_load $path/$data/train.csv\
                          --gen_save $path/$data/$grammar/gen\
-                         --n_samples 11\
+                         --n_samples 1000\
                          --testsize 500\
                          --loglevel 99\
                          --burnin 20\
