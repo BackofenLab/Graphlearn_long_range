@@ -24,6 +24,17 @@ def mk1set(ind ,randseed):
         os.mkdir(di)
         rdk.nx_to_moses(nt,di+'/train.csv')
 
+#for i,e in enumerate([1,2,3]):
+#    mk1set(i,e)
+
+def mk2set(ind ,randseed):
+    p,n,psamp,nsamp,ptrain,ntrain = main.get_all_graphs(randseed)
+    
+    rdk.nx_to_moses(p,f"{foldername}/ptest_{ind}.csv")
+    rdk.nx_to_moses(n,f"{foldername}/ntest_{ind}.csv")
+    rdk.nx_to_moses(ptrain,f"{foldername}/ptrain_{ind}.csv")
+    rdk.nx_to_moses(ntrain,f"{foldername}/ntrain_{ind}.csv")
+
 for i,e in enumerate([1,2,3]):
-    mk1set(i,e)
+    mk2set(i,e)
 
