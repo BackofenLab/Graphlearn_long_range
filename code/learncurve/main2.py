@@ -324,20 +324,29 @@ def alt_lc_get_graphs(randseed):
     return ptest,ntest,psample, nsample, ptrain,ntrain 
 
 def sge_alternative_lc(randseed=123,executer=None,addgraphs = None): 
-
-
+    # we make 2 sampler (p and n) and train an increasing amount of data on it
     ptest,ntest,psample, nsample, ptrain,ntrain  = alt_lc_get_graphs(randseed)
     scorer = make_scorer(ptest,ntest)
-    
     psamp,_ = addgraphs(ptrain)
     nsamp,_ = addgraphs(ntrain)
-    
     # send all the jobs
     for p,n in zip(psample,nsample):
         executer.add_job(psamp,p)
         executer.add_job(nsamp,n)
-
     return scorer,psample,nsample
+
+def sge_alternative_lc2(randseed=123,executer=None,addgraphs = None): 
+    # we freeze the start graphs but use increasing samplers
+    ptest,ntest,  ptrain,ntrain, psample, nsample= alt_lc_get_graphs(randseed)
+
+    scorer = make_scorer(ptest,ntest)
+
+    for p,n in zip(ptrain,ntrain):
+        executer.add_job(addgraphs(p)[0],psample)
+        executer.add_job(addgraphs(n)[0],nsample)
+
+    return scorer,[psample]*len(ptrain),[nsample]*len(ntrain)
+
 
 
 
@@ -378,8 +387,10 @@ if __name__ == "__main__":
             a,b,c = list(zip(*[learncurve_mp(x,addgraphs) for x in args.repeatseeds]))
         else:
             executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
-            if args.alternative_lc:
+            if args.alternative_lc==1:
                 z = [sge_alternative_lc(x,executer,addgraphs) for x in args.repeatseeds]
+            if args.alternative_lc==2:
+                z = [sge_alternative_lc2(x,executer,addgraphs) for x in args.repeatseeds]
             else:
                 z = [prepgsetask(x,executer,addgraphs) for x in args.repeatseeds]
             res = executer.execute() 

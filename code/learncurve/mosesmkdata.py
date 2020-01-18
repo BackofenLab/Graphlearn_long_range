@@ -6,9 +6,9 @@
 import main2 as main 
 import os 
 import rdkitutils as rdk
+import basics as ba
 
-
-foldername = 'mosestrain'
+foldername = 'moses_lc2'
 os.mkdir(foldername)
 
 def mk1set(ind ,randseed):
@@ -28,10 +28,10 @@ def mk1set(ind ,randseed):
 #    mk1set(i,e)
 
 def mk2set(ind ,randseed):
-    p,n,psamp,nsamp,ptrain,ntrain = main.get_all_graphs(randseed)
+    p,n,psamp,nsamp,ptrain,ntrain = main.alt_lc_get_graphs(randseed)
     
-    rdk.nx_to_moses(p,f"{foldername}/ptest_{ind}.csv")
-    rdk.nx_to_moses(n,f"{foldername}/ntest_{ind}.csv")
+    ba.dumpfile(p,f"{foldername}/ptest_{ind}.pick")
+    ba.dumpfile(n,f"{foldername}/ntest_{ind}.pick")
     rdk.nx_to_moses(ptrain,f"{foldername}/ptrain_{ind}.csv")
     rdk.nx_to_moses(ntrain,f"{foldername}/ntrain_{ind}.csv")
 
