@@ -317,12 +317,16 @@ def prepgsetask(randseed=123,executer=None,addgraphs = None):
  
 
 
-def sge_alternative_lc(randseed=123,executer=None,addgraphs = None): 
+def alt_lc_get_graphs(randseed):
     ptest,ntest,psample, nsample  = get_all_graphs(randseed)
-
     lastsample = len(psample[-2])
     ptrain, ntrain  =  psample.pop()[lastsample:], nsample.pop()[lastsample:] 
+    return ptest,ntest,psample, nsample, ptrain,ntrain 
 
+def sge_alternative_lc(randseed=123,executer=None,addgraphs = None): 
+
+
+    ptest,ntest,psample, nsample, ptrain,ntrain  = alt_lc_get_graphs(randseed)
     scorer = make_scorer(ptest,ntest)
     
     psamp,_ = addgraphs(ptrain)

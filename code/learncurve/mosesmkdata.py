@@ -38,3 +38,6 @@ def mk2set(ind ,randseed):
 for i,e in enumerate([1,2,3]):
     mk2set(i,e)
 
+
+
+
