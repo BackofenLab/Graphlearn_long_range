@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit
+import sys
 import basics as ba
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,5 +88,8 @@ x = [200,400,600,800,1000,1200]
 #x,a,b,c = ba.loadfile("char_rnn.pickle")  
 #x = [200,400,600,800,1200]
 #print (x,a,b)
-x,a,b,c = ba.loadfile("sav.sav")
-learncurve(x,a,b,c )
+x,means,b,c = ba.loadfile(sys.argv[1])
+print ("         ",x[0])
+for a,b in zip(means, ['combined ','original ','generated']):
+    print(b,' '.join([ "%.3f" % aa   for aa in a]))
+#learncurve(x,means,b,c )

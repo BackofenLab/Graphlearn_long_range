@@ -1,11 +1,10 @@
-rm /home/mautner/scratch/logfiles/ld_e/*
-rm /home/mautner/scratch/logfiles/ld_o/*
-rm *.pickle 
-rm res/*
 
-
-set grammars classic coarse priosim coarseloco
+set grammars  priosim # coarseloco  classic coarse
 for grammar in $grammars 
+    rm /home/mautner/scratch/logfiles/ld_e/*
+    rm /home/mautner/scratch/logfiles/ld_o/*
+    rm *.pickle 
+    rm res/*
     python3 main2.py --n_jobs 24\
                      --sge\
                      --grammar $grammar\
