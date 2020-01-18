@@ -23,6 +23,7 @@ import os.path
 import logging
 import sys
 import basics.sgexec as sgexec
+import basics.load_utils as lu
 
 from rdkit import rdBase
 rdBase.DisableLog('rdApp.*')
@@ -43,21 +44,23 @@ parser.add_argument('--trainsizes',type=int,nargs='+', help='list of trainsizes'
 parser.add_argument('--repeatseeds',type=int,default=[1,2,3],nargs='+', help='list of seeds for repeats.. more seeds means more repeats')
 parser.add_argument('--radii',type=int,default =[0,1,2],nargs='+', help='radiuslist')
 parser.add_argument('--thickness',type=int,default = 1, help='thickness, 1 is best')
-parser.add_argument('--min_cip',type=int,default = 1, help='cip min count')
+parser.add_argument('--min_cip',type=int,default = 2, help='cip min count')
 parser.add_argument('--reg',type=float,default = .25 , help='regulates aggressiveness of acepting worse graphs')
 parser.add_argument('--save',type=str,default = 'sav.sav' , help='save file')
-
+parser.add_argument('--svmkernel',type=str,default = 'linear' , help='linear or rbf')
 
 # args for other uses
 parser.add_argument('--model',type=str,default = 'aae' , help='dummy parameter because this file got too powerful')
 parser.add_argument('--train_load',type=str,default='', help=' dataset') 
 parser.add_argument('--gen_save',type=str, help='genereated smiles goes here') 
 parser.add_argument('--n_samples',type=int, help='effectively limit nr of startgraphs ') 
+parser.add_argument('--alternative_lc',type=int,default=0, help='choose the alternative learncurve, indicate train size behing trainsizes') 
 
 args = parser.parse_args()
 
 
 logging.basicConfig(stream=sys.stdout, level=args.loglevel)
+logger = logging.getLogger(__name__)
 
 # 1. load a (shuffeled) negative and positive dataset, + cache..
 def getnx(fname,randseed=123):
@@ -71,6 +74,7 @@ def getnx(fname,randseed=123):
         with gzip.open(fname,'rb') as fi:
             smiles = fi.read()
         graphs = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
+        graphs= lu.pre_process(graphs,require=8000)
         ba.dumpfile(graphs,cachename)
 
     '''shuffle and return'''
@@ -81,22 +85,30 @@ def getnx(fname,randseed=123):
 
 
 def loadsmi(fname,randseed = 123):
-    g = list(rut.smi_to_nx(fname))
+    '''can we load from cache?'''
+    cachename = fname+".cache"
+    if os.path.isfile(cachename):
+        graphs = ba.loadfile(cachename)
+    else:
+        g = list(rut.smi_to_nx(fname))
+        graphs= lu.pre_process(g,require=8000)
+        ba.dumpfile(graphs,cachename)
+
     random.seed(randseed)
-    random.shuffle(g)
-    return g
+    random.shuffle(graphs)
+    return graphs
 
 
 # 2. use Y graphs for validation and an increasing rest for training
 def get_all_graphs(randseed = 123):
-    pos = loadsmi(args.pos,randseed) if "bursi" in args.pos else getnx(args.pos,randseed)
-    neg = loadsmi(args.neg,randseed) if "bursi" in args.neg else getnx(args.neg,randseed)
-    print("lenpos:", len(pos))
-    print("lenneg:", len(neg))
+    pos = loadsmi(args.pos,randseed) if ".smi" in args.pos else getnx(args.pos,randseed)
+    neg = loadsmi(args.neg,randseed) if ".smi" in args.neg else getnx(args.neg,randseed)
+    
+    logger.log(40,"got pos: %d" % len(pos))
+    logger.log(40,"got neg: %d" % len(neg))
     ptest,prest= pos[:args.testsize], pos[args.testsize:]
     ntest,nrest= neg[:args.testsize], neg[args.testsize:]
-    return ptest,ntest,[prest[:x] for x in args.trainsizes],[nrest[:x] for x in args.trainsizes]
-
+    return ptest,ntest, [prest[:x] for x in args.trainsizes], [nrest[:x] for x in args.trainsizes] 
 
 
 # 3. for each train set (or tupple of sets) generate new graphs 
@@ -110,9 +122,9 @@ def classic(graphs):
             ) 
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
-    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
-    #scorer = score.OneClassEstimator(n_jobs=args.n_jobs,
-            model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
+    logger.log(40,"grammar:"+str(grammar))
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs, vectorizer= eden.Vectorizer(nbits=15),
+            model=svm.OneClassSVM(kernel=args.svmkernel,gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectClassic(reg=args.reg) 
     transformer = transformutil.no_transform()
@@ -125,17 +137,23 @@ def classic(graphs):
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
 
+def identity(x):return x
+def identity_sampler(graphs):
+    return identity, graphs
+
+
+
 def priosim(graphs):
     grammar = loco.LOCO(  
             decomposition_args={"radius_list":args.radii, 
                                 "thickness_list": [args.thickness],  
                                 "thickness_loco": 2+args.thickness},
             filter_args={"min_cip_count": args.min_cip,                               
-                         "min_interface_count": 1}
+                         "min_interface_count": 2}
             ) 
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
-    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
+    scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs, 
             model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectClassic(reg=args.reg) 
@@ -154,10 +172,10 @@ def coarse(graphs):
     grammar = lsggl.lsgg_layered(  
             decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [2],  
-                                "base_thickness_list": [1]
+                                "base_thickness": 1
                                 },
             filter_args={"min_cip_count": 1,                               
-                         "min_interface_count": 1}
+                         "min_interface_count": 2}
             ) 
     assert len(graphs) > 10
     c= cycler.Cycler()
@@ -165,7 +183,7 @@ def coarse(graphs):
     scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
             model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectClassic(reg=0) 
+    selector = choice.SelectClassic(reg=args.reg) 
     
     sampler = sample.sampler(
             transformer=c, 
@@ -178,13 +196,13 @@ def coarse(graphs):
 def coarseloco(graphs):
     # UNTESTED
     grammar = lsgg_LL.lsgg_locolayer(  
-            decomposition_args={"radius_list": [0,1,2], 
+            decomposition_args={"radius_list": [0,1], 
                                 "thickness_list": [2],  
-                                "base_thickness_list": [1],
-                                "thickness_loco": 2+1
+                                "base_thickness": 1,
+                                "thickness_loco": 3
                                 },
             filter_args={"min_cip_count": 1,                               
-                         "min_interface_count": 1}
+                         "min_interface_count": 2}
             ) 
     assert len(graphs) > 10
     c= cycler.Cycler()
@@ -192,7 +210,7 @@ def coarseloco(graphs):
     scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs,
             model=svm.OneClassSVM(kernel='linear',gamma='auto')).fit(graphs)
     scorer.n_jobs=1 # demons cant spawn children
-    selector = choice.SelectClassic(reg=0) 
+    selector = choice.SelectClassic(reg=args.reg) 
     
     sampler = sample.sampler(
             transformer=c, 
@@ -226,7 +244,10 @@ def vectorize(graphs):
 def getscore(g_tup,xt=None,yt=None): 
     v,y=g_tup
     svc = svm.SVC(gamma='auto').fit(v,y) 
-    return  roc_auc_score(yt,svc.decision_function(xt))
+    acc =  svc.score(xt,yt)
+    roc=   roc_auc_score(yt,svc.decision_function(xt))
+    logger.log(51,f"scorer: {len(y)} -> {acc} {roc}")
+    return roc
 
 def make_scorer(ptest,ntest):
     X_test= sp.sparse.vstack((vectorize(ptest), vectorize(ntest)))
@@ -239,6 +260,7 @@ def evaluate(scorer,ptrains,ntrains,res):
     baseline = []
     genscore = []
     tasks=[]
+    res = res [::-1] # pop will pop from the end... icould zip but then i have would have to group
     for p,n in zip(ptrains,ntrains):
         gp = res.pop()
         gn = res.pop()
@@ -278,11 +300,10 @@ def learncurve_mp(randseed=123,addgraphs=None):
         res.append(ba.mpmap_prog(*addgraphs(n),
             poolsize = args.n_jobs, chunksize=1))
   
-    res = res [::-1] # pop will pop from the end...  
     return evaluate(scorer,ptrains,ntrains,res)
 
 
-def learncurve(randseed=123,executer=None,addgraphs = None): 
+def prepgsetask(randseed=123,executer=None,addgraphs = None): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
     scorer = make_scorer(ptest,ntest)
@@ -296,6 +317,25 @@ def learncurve(randseed=123,executer=None,addgraphs = None):
  
 
 
+def sge_alternative_lc(randseed=123,executer=None,addgraphs = None): 
+    ptest,ntest,psample, nsample  = get_all_graphs(randseed)
+
+    lastsample = len(psample[-2])
+    ptrain, ntrain  =  psample.pop()[lastsample:], nsample.pop()[lastsample:] 
+
+    scorer = make_scorer(ptest,ntest)
+    
+    psamp,_ = addgraphs(ptrain)
+    nsamp,_ = addgraphs(ntrain)
+    
+    # send all the jobs
+    for p,n in zip(psample,nsample):
+        executer.add_job(psamp,p)
+        executer.add_job(nsamp,n)
+
+    return scorer,psample,nsample
+
+
 
 def format_abc(a,b,c, sav='res.pickle'):
     cm =[ np.mean(x) for x in list(zip(*a))  ] 
@@ -305,12 +345,12 @@ def format_abc(a,b,c, sav='res.pickle'):
     os=[ np.std(x) for x in list(zip(*b))  ] 
     gs=[ np.std(x) for x in list(zip(*c))  ] 
 
-    print('combined',      cm )
-    print('originals only',om )
-    print('generated only',gm )
-    print('combined',      cs )
-    print('originals only',os )
-    print('generated only',gs )
+    logger.log(51,f'combined  {cm}')
+    logger.log(51,f'originals {om}')
+    logger.log(51,f'generated {gm}')
+    logger.log(41,f'combined{cs}')
+    logger.log(41,f'originals only{os}')
+    logger.log(41,f'generated only{gs}')
 
     ts = np.array(args.trainsizes)
     gen = np.array( [ e*((args.n_steps-args.burnin)//args.emit +1)   for e in args.trainsizes] )
@@ -334,7 +374,10 @@ if __name__ == "__main__":
             a,b,c = list(zip(*[learncurve_mp(x,addgraphs) for x in args.repeatseeds]))
         else:
             executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
-            z= [learncurve(x,executer,addgraphs) for x in args.repeatseeds]
+            if args.alternative_lc:
+                z = [sge_alternative_lc(x,executer,addgraphs) for x in args.repeatseeds]
+            else:
+                z = [prepgsetask(x,executer,addgraphs) for x in args.repeatseeds]
             res = executer.execute() 
             meal=peacemeal(res,len(args.repeatseeds))
             a,b,c = list(zip(*[evaluate(s,pt,nt,meal.get()) for s,pt,nt in z ]))
