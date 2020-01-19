@@ -30,6 +30,7 @@ rdBase.DisableLog('rdApp.*')
 
 parser = argparse.ArgumentParser(description='generating graphs given few examples')
 parser.add_argument('--n_jobs',type=int, help='number of jobs')
+parser.add_argument('--optimize',type=int,default=0, help='evaluate only whats necessary')
 parser.add_argument('--emit',type=int, help='emit every x graphs')
 parser.add_argument('--burnin',type=int, help='start emiting after this many steps')
 parser.add_argument('--grammar',type=str, help='priosim, ??')
@@ -286,6 +287,38 @@ def evaluate(scorer,ptrains,ntrains,res):
     
     return myscore,baseline,genscore
 
+def evaluate_lazy(scorer,ptrains,ntrains,res):
+    # print curve
+    myscore   = []
+    baseline = []
+    genscore = []
+    tasks=[]
+    res = res [::-1] # pop will pop from the end... icould zip but then i have would have to group
+    for p,n in zip(ptrains,ntrains):
+        gp = res.pop()
+        gn = res.pop()
+        if isinstance(gp[0],list):
+            gp = [g for gl in gp for g in gl]
+            gn = [g for gl in gn for g in gl]
+        gp = vectorize([g for g in  gp if g is not None])
+        gn=vectorize([g for g in gn if g is  not None])
+        p=vectorize(p)
+        n=vectorize(n)
+        f= lambda a,b : (sp.sparse.vstack((a,b)), [1]*a.shape[0]+[0]*b.shape[0])
+        tasks += [f(gp,gn)]
+
+    #res=ba.mpmap_prog(scorer,tasks)
+    res = [scorer(x) for x in tasks]
+
+    #p= peacemeal(res,123)
+    for c in res:
+        myscore.append(0)
+        baseline.append(0)
+        genscore.append(c)
+    
+    return myscore,baseline,genscore
+
+
 def learncurve_mp(randseed=123,addgraphs=None): 
     # SET UP VALIDATION SET
     ptest,ntest,ptrains, ntrains = get_all_graphs(randseed)
@@ -395,5 +428,6 @@ if __name__ == "__main__":
                 z = [prepgsetask(x,executer,addgraphs) for x in args.repeatseeds]
             res = executer.execute() 
             meal=peacemeal(res,len(args.repeatseeds))
-            a,b,c = list(zip(*[evaluate(s,pt,nt,meal.get()) for s,pt,nt in z ]))
+            if args.optimize:a,b,c = list(zip(*[evaluate_lazy(s,pt,nt,meal.get()) for s,pt,nt in z ]))
+            else: a,b,c = list(zip(*[evaluate(s,pt,nt,meal.get()) for s,pt,nt in z ]))
         format_abc(a,b,c,args.save) 

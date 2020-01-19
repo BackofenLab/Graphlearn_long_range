@@ -27,7 +27,8 @@ function gogo
         --reg $argv[3]\
         --min_cip $argv[4]\
         --trainsize  200 400 700\
-        --repeatseeds 12 123\
+        --optimize 1\
+        --repeatseeds 12\
         --save (string join "_" $argv).sav #(date  "+%j_%H_%M").sav
 
 
@@ -38,7 +39,7 @@ function gogo
 
 end 
 
-for steps in 2 4 6 
+for steps in 2 
     for thickness in 1 2 
         for reg in .1 .3 .5 .7 .9
             for mincip in 1 2
@@ -48,3 +49,7 @@ for steps in 2 4 6
         end
     end
 end
+
+
+#grep "PARAMS|generated" 10hoptires.txt | grep "PARAMS| 0\.73"
+
