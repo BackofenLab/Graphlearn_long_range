@@ -20,8 +20,8 @@ function gogo
         --loglevel  50\
         --grammar classic\
         --alternative_lc 1\
-        --burnin $argv[1]0\
-        --n_steps $argv[1]1\
+        --burnin $argv[1]\
+        --n_steps (math $argv[1]+1)\
         --thickness $argv[2]\
         --emit 5\
         --reg $argv[3]\
@@ -39,9 +39,9 @@ function gogo
 
 end 
 
-for steps in 2 
+for steps in 20 #5 10 15 20
     for thickness in 1 2 
-        for reg in .1 .3 .5 .7 .9
+        for reg in .1 .5 .9
             for mincip in 1 2
                 echo "############### PARAMS  $steps $thickness $reg $mincip"
                 gogo $steps $thickness $reg $mincip
