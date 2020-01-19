@@ -25,15 +25,15 @@ python3 main2.py\
     --testsize 500\
     --loglevel  50\
     --grammar classic\
-    --alternative_lc 1\
+    --alternative_lc 2\
     --burnin 20\
     --n_steps 21\
     --thickness 2\
     --emit 5\
     --reg .5\
-    --trainsize  200 400 700\
-    --repeatseeds 12\
-    --save sav.sav #(date  "+%j_%H_%M").sav
+    --trainsize  200 400 600 1000\
+    --repeatseeds 12 23 32\
+    --save inc_train.sav #(date  "+%j_%H_%M").sav
 
 if test $sge = "T"
     #cat /home/mautner/scratch/logfiles/ld_o/*
