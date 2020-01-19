@@ -33,6 +33,7 @@ parser.add_argument('--n_jobs',type=int, help='number of jobs')
 parser.add_argument('--optimize',type=int,default=0, help='evaluate only whats necessary')
 parser.add_argument('--emit',type=int, help='emit every x graphs')
 parser.add_argument('--burnin',type=int, help='start emiting after this many steps')
+parser.add_argument('--num_sample',type=int, help='number of graphs to sample each step')
 parser.add_argument('--grammar',type=str, help='priosim, ??')
 parser.add_argument('--sge', dest='sge', action='store_true')
 parser.add_argument('--no-sge', dest='sge', action='store_false')
@@ -135,6 +136,7 @@ def classic(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
+            num_sample = args.num_sample,
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
 
@@ -302,8 +304,8 @@ def evaluate_lazy(scorer,ptrains,ntrains,res):
             gn = [g for gl in gn for g in gl]
         gp = vectorize([g for g in  gp if g is not None])
         gn=vectorize([g for g in gn if g is  not None])
-        p=vectorize(p)
-        n=vectorize(n)
+        #p=vectorize(p)
+        #n=vectorize(n)
         f= lambda a,b : (sp.sparse.vstack((a,b)), [1]*a.shape[0]+[0]*b.shape[0])
         tasks += [f(gp,gn)]
 
@@ -422,7 +424,7 @@ if __name__ == "__main__":
             executer = sgexec.sgeexecuter(loglevel=args.loglevel, die_on_fail=False)
             if args.alternative_lc==1:
                 z = [sge_alternative_lc(x,executer,addgraphs) for x in args.repeatseeds]
-            if args.alternative_lc==2:
+            elif args.alternative_lc==2:
                 z = [sge_alternative_lc2(x,executer,addgraphs) for x in args.repeatseeds]
             else:
                 z = [prepgsetask(x,executer,addgraphs) for x in args.repeatseeds]
