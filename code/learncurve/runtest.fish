@@ -23,19 +23,19 @@ python3 main2.py\
     --n_jobs 24\
     $sgearg\
     --testsize 300\
-    --loglevel  20\
+    --loglevel  50\
     --num_sample 50\
-    --grammar classic\
-    --alternative_lc 2\
+    --grammar $argv[1]\
+    --alternative_lc 1\
     --burnin 20\
     --n_steps 21\
     --thickness 2\
     --emit 5\
     --reg .5\
-    --trainsize  200 400 800\
-    --optimize 1\
-    --repeatseeds 12\
-    --save inc_train.sav #(date  "+%j_%H_%M").sav
+    --trainsize  300 600 900 1200\
+    --optimize 0\
+    --repeatseeds 12 2 34\
+    --save $argv[1].sav #(date  "+%j_%H_%M").sav
 
 if test $sge = "T"
     #cat /home/mautner/scratch/logfiles/ld_o/*
