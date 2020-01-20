@@ -167,6 +167,7 @@ def priosim(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
+            num_sample = args.num_sample,
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit, faster=True) 
     return sampler.sample_burnin,graphs
 
@@ -193,6 +194,7 @@ def coarse(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
+            num_sample = args.num_sample,
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
 
@@ -220,6 +222,7 @@ def coarseloco(graphs):
             grammar=grammar, 
             scorer=scorer, 
             selector=selector, 
+            num_sample = args.num_sample,
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit, faster=True) 
     return sampler.sample_burnin,graphs
 

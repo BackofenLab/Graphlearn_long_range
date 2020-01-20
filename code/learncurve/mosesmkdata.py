@@ -8,7 +8,7 @@ import os
 import rdkitutils as rdk
 import basics as ba
 
-foldername = 'moses_lc2_2'
+foldername = 'moses_lc2_REAL'
 os.mkdir(foldername)
 
 def mk1set(ind ,randseed):
@@ -35,8 +35,8 @@ def mk2set(ind ,randseed):
     rdk.nx_to_moses(ptrain,f"{foldername}/ptrain_{ind}.csv")
     rdk.nx_to_moses(ntrain,f"{foldername}/ntrain_{ind}.csv")
 
-for i,e in enumerate([1,2,3]):
-    mk2set(i+1,e)
+for i,e in enumerate([12,2,34]):
+    mk1set(i+1,e)
 
 
 

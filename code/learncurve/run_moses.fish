@@ -1,6 +1,6 @@
 set data data5000
 set path $HOME/repos/moses
-set grammars priosim #coarseloco classic coarse 
+set grammars classic coarse priosim coarseloco 
 
 switch $argv[1]
 
@@ -32,7 +32,9 @@ case runall
                          --burnin 20\
                          --emit 5\
                          --n_steps 21\
-                         --repeatseeds 1333
+                         --num_sample 50\
+                         --thickness 2
+
     end
 end
 
