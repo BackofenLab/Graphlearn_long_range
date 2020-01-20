@@ -178,7 +178,7 @@ def coarse(graphs):
                                 "thickness_list": [2],  
                                 "base_thickness": 1
                                 },
-            filter_args={"min_cip_count": 1,                               
+            filter_args={"min_cip_count": 2,                               
                          "min_interface_count": 2}
             ) 
     assert len(graphs) > 10
@@ -201,12 +201,12 @@ def coarse(graphs):
 def coarseloco(graphs):
     # UNTESTED
     grammar = lsgg_LL.lsgg_locolayer(  
-            decomposition_args={"radius_list": [0,1], 
+            decomposition_args={"radius_list": [0,1,2], 
                                 "thickness_list": [2],  
                                 "base_thickness": 1,
                                 "thickness_loco": 3
                                 },
-            filter_args={"min_cip_count": 1,                               
+            filter_args={"min_cip_count": 2,                               
                          "min_interface_count": 2}
             ) 
     assert len(graphs) > 10
