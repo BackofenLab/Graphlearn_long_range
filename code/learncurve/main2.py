@@ -1,8 +1,8 @@
 import graphlearn as gl
 import numpy as np
-import graphlearn.lsgg_loco as loco
+import graphlearn.lsgg_pisi as pisi
 import graphlearn.lsgg_layered as lsggl 
-import graphlearn.lsgg_locolayer as lsgg_LL
+import graphlearn.lsgg_pisilayer as lsgg_PL
 from graphlearn.test import cycler
 import graphlearn.lsgg as lsgg
 import graphlearn.score as score
@@ -115,9 +115,10 @@ def get_all_graphs(randseed = 123):
 
 # 3. for each train set (or tupple of sets) generate new graphs 
 def classic(graphs):
-    grammar = lsgg.lsgg(
+    
+    grammar = lsgg.lsgg_sample(
             decomposition_args={"radius_list": args.radii, 
-                                "thickness_list": [args.thickness]
+                                "thickness": args.thickness
                                },
             filter_args={"min_cip_count": args.min_cip,                               
                          "min_interface_count": 2}
@@ -147,10 +148,9 @@ def identity_sampler(graphs):
 
 
 def priosim(graphs):
-    grammar = loco.LOCO(  
+    grammar = pisi.PiSi(  
             decomposition_args={"radius_list":args.radii, 
-                                "thickness_list": [args.thickness],  
-                                "thickness_loco": 2+args.thickness},
+                                "thickness": args.thickness,                                "thickness_loco": 2+args.thickness},
             filter_args={"min_cip_count": args.min_cip,                               
                          "min_interface_count": 2}
             ) 
@@ -175,7 +175,7 @@ def coarse(graphs):
     # UNTESTED
     grammar = lsggl.lsgg_layered(  
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [2],  
+                                "thickness": 2,  
                                 "base_thickness": 1
                                 },
             filter_args={"min_cip_count": 2,                               
@@ -200,9 +200,9 @@ def coarse(graphs):
 
 def coarseloco(graphs):
     # UNTESTED
-    grammar = lsgg_LL.lsgg_locolayer(  
+    grammar = lsgg_PL.lsgg_pisilayer(  
             decomposition_args={"radius_list": [0,1,2], 
-                                "thickness_list": [2],  
+                                "thickness": 2,  
                                 "base_thickness": 1,
                                 "thickness_loco": 3
                                 },

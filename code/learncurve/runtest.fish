@@ -22,9 +22,9 @@ python3 main2.py\
     --neg AID/AID624466_inactive.smi --pos AID/AID624466_active.smi\
     --n_jobs 24\
     $sgearg\
-    --testsize 300\
+    --testsize 100\
     --loglevel  50\
-    --num_sample 50\
+    --num_sample 10\
     --grammar $argv[1]\
     --alternative_lc 1\
     --burnin 20\
@@ -32,9 +32,9 @@ python3 main2.py\
     --thickness 2\
     --emit 5\
     --reg .5\
-    --trainsize  300 600 900 1200\
+    --trainsize  200 400\
     --optimize 0\
-    --repeatseeds 12 2 34\
+    --repeatseeds 12\
     --save $argv[1].sav #(date  "+%j_%H_%M").sav
 
 if test $sge = "T"
