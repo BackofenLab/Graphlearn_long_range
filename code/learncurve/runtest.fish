@@ -1,5 +1,5 @@
 
-set sge T 
+set sge T
 
 if test $sge = "T"
     set sgearg "--sge"
@@ -23,7 +23,7 @@ python3 main2.py\
     --n_jobs 24\
     $sgearg\
     --testsize 100\
-    --loglevel  50\
+    --loglevel  10\
     --num_sample 10\
     --grammar $argv[1]\
     --alternative_lc 1\

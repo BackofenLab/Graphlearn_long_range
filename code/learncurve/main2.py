@@ -4,7 +4,6 @@ import graphlearn.lsgg_pisi as pisi
 import graphlearn.lsgg_layered as lsggl 
 import graphlearn.lsgg_pisilayer as lsgg_PL
 from graphlearn.test import cycler
-import graphlearn.lsgg as lsgg
 import graphlearn.score as score
 import graphlearn.choice as choice
 import graphlearn.test.transformutil as transformutil
@@ -116,13 +115,11 @@ def get_all_graphs(randseed = 123):
 # 3. for each train set (or tupple of sets) generate new graphs 
 def classic(graphs):
     
-    grammar = lsgg.lsgg_sample(
-            decomposition_args={"radius_list": args.radii, 
-                                "thickness": args.thickness
-                               },
-            filter_args={"min_cip_count": args.min_cip,                               
-                         "min_interface_count": 2}
-            ) 
+    grammar = sample.LocalSubstitutionGraphGrammarSample(
+                        radii=  args.radii, 
+                        thickness = args.thickness,
+                        filter_min_cip = args.min_cip,                               
+                        filter_min_interface =  2) 
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
     logger.log(40,"grammar:"+str(grammar))
@@ -131,7 +128,6 @@ def classic(graphs):
     scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectClassic(reg=args.reg) 
     transformer = transformutil.no_transform()
-    
     sampler = sample.sampler(
             transformer=transformer, 
             grammar=grammar, 
