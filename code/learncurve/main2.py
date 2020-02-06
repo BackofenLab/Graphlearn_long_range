@@ -144,12 +144,12 @@ def identity_sampler(graphs):
 
 
 def priosim(graphs):
-    grammar = pisi.PiSi(  
-            decomposition_args={"radius_list":args.radii, 
-                                "thickness": args.thickness,                                "thickness_loco": 2+args.thickness},
-            filter_args={"min_cip_count": args.min_cip,                               
-                         "min_interface_count": 2}
-            ) 
+    grammar = pisi.PiSi(
+                        radii=  args.radii, 
+                        thickness = args.thickness,
+                        filter_min_cip = args.min_cip,                               
+                        filter_min_interface =  2,
+                        thickness_pisi = args.thickness+1)  
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
     scorer = score.OneClassSizeHarmMean(n_jobs=args.n_jobs, 
@@ -170,13 +170,11 @@ def priosim(graphs):
 def coarse(graphs):
     # UNTESTED
     grammar = lsggl.lsgg_layered(  
-            decomposition_args={"radius_list": [0,1,2], 
-                                "thickness": 2,  
-                                "base_thickness": 1
-                                },
-            filter_args={"min_cip_count": 2,                               
-                         "min_interface_count": 2}
-            ) 
+                       radii=  args.radii, 
+                        thickness = args.thickness,
+                        filter_min_cip = args.min_cip,                               
+                        filter_min_interface =  2,
+                        base_thickness = 1) 
     assert len(graphs) > 10
     c= cycler.Cycler()
     grammar.fit(c.encode(graphs),n_jobs = args.n_jobs)
@@ -194,17 +192,17 @@ def coarse(graphs):
             n_steps=args.n_steps, burnin = args.burnin, emit=args.emit) 
     return sampler.sample_burnin,graphs
 
-def coarseloco(graphs):
+def coarsepisi(graphs):
     # UNTESTED
     grammar = lsgg_PL.lsgg_pisilayer(  
-            decomposition_args={"radius_list": [0,1,2], 
-                                "thickness": 2,  
-                                "base_thickness": 1,
-                                "thickness_loco": 3
-                                },
-            filter_args={"min_cip_count": 2,                               
-                         "min_interface_count": 2}
-            ) 
+                       radii=  args.radii, 
+                        thickness = args.thickness,
+                        filter_min_cip = args.min_cip,                               
+                        filter_min_interface =  2,
+                        thickness_pisi = 3,
+                        base_thickness=1) 
+
+
     assert len(graphs) > 10
     c= cycler.Cycler()
     grammar.fit(c.encode(graphs),n_jobs = args.n_jobs)

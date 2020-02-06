@@ -16,8 +16,6 @@ end
 #--neg AID/AID651610_inactive.smi --pos AID/AID651610_active.smi
 #--neg AID/bursi_neg.smi --pos AID/bursi_pos.smi\
 
-
-
 python3 main2.py\
     --neg AID/AID624466_inactive.smi --pos AID/AID624466_active.smi\
     --n_jobs 24\
