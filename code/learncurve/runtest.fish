@@ -17,7 +17,7 @@ end
 #--neg AID/bursi_neg.smi --pos AID/bursi_pos.smi\
 
 python3 main2.py\
-    --neg AID/AID624466_inactive.smi --pos AID/AID624466_active.smi\
+    --neg AID/bursi_neg.smi --pos AID/bursi_pos.smi\
     --n_jobs 24\
     $sgearg\
     --testsize 100\
@@ -25,12 +25,13 @@ python3 main2.py\
     --num_sample 10\
     --grammar $argv[1]\
     --alternative_lc 1\
+    --radii 0 2\
     --burnin 20\
     --n_steps 21\
-    --thickness 2\
+    --thickness 1\
     --emit 5\
     --reg .5\
-    --trainsize  200 400\
+    --trainsize  100 300\
     --optimize 0\
     --repeatseeds 12\
     --save $argv[1].sav #(date  "+%j_%H_%M").sav

@@ -75,7 +75,7 @@ def getnx(fname,randseed=123):
         with gzip.open(fname,'rb') as fi:
             smiles = fi.read()
         graphs = list(rut.smiles_strings_to_nx([line.split()[1] for line in  smiles.split(b'\n')[:-1]]))
-        graphs= lu.pre_process(graphs,require=8000)
+        graphs= lu.pre_process(graphs)
         ba.dumpfile(graphs,cachename)
 
     '''shuffle and return'''
@@ -92,7 +92,7 @@ def loadsmi(fname,randseed = 123):
         graphs = ba.loadfile(cachename)
     else:
         g = list(rut.smi_to_nx(fname))
-        graphs= lu.pre_process(g,require=8000)
+        graphs= lu.pre_process(g)
         ba.dumpfile(graphs,cachename)
 
     random.seed(randseed)
@@ -119,7 +119,8 @@ def classic(graphs):
                         radii=  args.radii, 
                         thickness = args.thickness,
                         filter_min_cip = args.min_cip,                               
-                        filter_min_interface =  2) 
+                        filter_min_interface =  2,
+                        nodelevel_radius_and_thickness= False) 
     assert len(graphs) > 10
     grammar.fit(graphs,n_jobs = args.n_jobs)
     logger.log(40,"grammar:"+str(grammar))
@@ -128,7 +129,7 @@ def classic(graphs):
     scorer.n_jobs=1 # demons cant spawn children
     selector = choice.SelectClassic(reg=args.reg) 
     transformer = transformutil.no_transform()
-    sampler = sample.sampler(
+    sampler = sample.Sampler(
             transformer=transformer, 
             grammar=grammar, 
             scorer=scorer, 
